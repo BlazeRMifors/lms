@@ -161,7 +161,7 @@ final class TransactionsHistoryViewModel {
     let interval = DateInterval(start: startDate, end: endDate)
     
     //    MainActor.run {
-    transactions = await service.getTransactions(for: interval)
+    transactions = await service.getTransactions(for: .income, in: interval)
     //    }
   }
 }

@@ -83,7 +83,7 @@ struct TransactionsListView: View {
 
 #Preview {
   TransactionsListView(
-    direction: .outcome
+    direction: .income
   )
 }
 
@@ -112,6 +112,6 @@ final class TransactionsListViewModel {
   
   func loadTransactions() async {
     let interval = DateInterval(start: startDate, end: endDate)
-    transactions = await service.getTransactions(for: interval)
+    transactions = await service.getTransactions(for: .income, in: interval)
   }
 }
