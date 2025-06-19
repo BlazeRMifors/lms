@@ -8,17 +8,17 @@
 import Foundation
 
 enum Direction {
-    case income
-    case outcome
+  case income
+  case outcome
 }
 
-struct Category: Identifiable {
-    let id: Int
-    let name: String
-    let emoji: Character
-    let isIncome: Bool
-    
-    var direction: Direction {
-        isIncome ? .income : .outcome
-    }
+struct Category: Identifiable, Hashable {
+  let id: Int
+  let name: String
+  let emoji: Character
+  let isIncome: Bool
+  
+  var direction: Direction {
+      isIncome ? .income : .outcome
+  }
 }

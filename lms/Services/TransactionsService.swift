@@ -19,9 +19,13 @@ final class TransactionsService {
     }
     
     func getTransactions(for period: DateInterval) async -> [Transaction] {
-        cache.getAll().filter {
-            period.contains($0.transactionDate)
-        }
+//        cache.getAll().filter {
+//            period.contains($0.transactionDate)
+//        }
+      await [
+        Transaction(id: 1, category: CategoriesService().getAllCategories()[0], amount: 1000, transactionDate: Date(), comment: "Test"),
+        Transaction(id: 2, category: CategoriesService().getAllCategories()[1], amount: 1500, transactionDate: Date(), comment: nil),
+      ]
     }
     
     func create(transaction: Transaction) async {
