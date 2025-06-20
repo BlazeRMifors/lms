@@ -9,14 +9,16 @@ import SwiftUI
 
 struct MainTabView: View {
   
+  @State var viewModel: MainTabViewModel
+  
   var body: some View {
     TabView {
-      TransactionsListView(direction: .outcome, currency: .rub)
+      TransactionsListView(viewModel: viewModel.outcomeModel)
         .tabItem {
           Label("Расходы", image: "downtrend-icon")
         }
       
-      TransactionsListView(direction: .income, currency: .rub)
+      TransactionsListView(viewModel: viewModel.incomeModel)
         .tabItem {
           Label("Доходы", image: "uptrend-icon")
         }
@@ -49,5 +51,29 @@ struct MainTabView: View {
 }
 
 #Preview {
-  MainTabView()
+  MainTabView(viewModel: previewMainTabViewModel)
 }
+
+@Observable
+final class MainTabViewModel {
+  
+  var currency = Currency.rub
+  var transactionService: TransactionsService
+  
+  let incomeModel: TransactionsListViewModel
+  let outcomeModel: TransactionsListViewModel
+  
+  init(
+    transactionService: TransactionsService,
+    currency: Currency = .rub
+  ) {
+    self.transactionService = transactionService
+    self.currency = currency
+    self.incomeModel = TransactionsListViewModel(direction: .income, currency: currency)
+    self.outcomeModel = TransactionsListViewModel(direction: .outcome, currency: currency)
+  }
+}
+
+fileprivate let previewMainTabViewModel = MainTabViewModel(
+  transactionService: TransactionsService()
+)
