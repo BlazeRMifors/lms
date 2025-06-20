@@ -10,31 +10,16 @@ import Combine
 
 struct TransactionsListView: View {
   
-  let direction: Direction
-  let currency: Currency
-  
-  @State var viewModel = TransactionsListViewModel()
-  
-  @State
-  private var screens: [TransactionsListItemViewModel] = []
-  
-  private var formatter: NumberFormatter {
-    let formatter = NumberFormatter()
-    formatter.numberStyle = .decimal
-    formatter.groupingSeparator = " "
-    formatter.decimalSeparator = ","
-    formatter.locale = Locale(identifier: "ru_RU")
-    return formatter
-  }
+  @State var viewModel: TransactionsListViewModel
   
   var body: some View {
-    NavigationStack(path: $screens) {
+    NavigationStack {
       VStack {
         List {
           HStack {
             Text("Всего")
             Spacer()
-            AmountView(amount: viewModel.totalAmount, currency: currency)
+            AmountView(amount: viewModel.totalAmount, currency: viewModel.currency)
           }
           
           Section(
@@ -66,39 +51,34 @@ struct TransactionsListView: View {
                   }
                   
                   Spacer()
-
-                  AmountView(amount: transaction.amount, currency: currency)
+                  
+                  AmountView(amount: transaction.amount, currency: viewModel.currency)
                 }
                 .frame(height: 44)
-//                  .frame(height: 36)
-//                  .padding(.vertical, 4)
-                  .alignmentGuide(.listRowSeparatorLeading) { _ in
-                    42
-                  }
+                .alignmentGuide(.listRowSeparatorLeading) { _ in
+                  42
+                }
               }
             }
           }
         }
-          .navigationTitle(direction == .income ? "Доходы сегодня" : "Расходы сегодня")
-          .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-              NavigationLink(
-                destination: TransactionsHistoryView(
-                  direction: direction,
-                  currency: currency
-                )
-              ) {
-                Image(systemName: "clock")
-                  .tint(.navigationBar)
-              }
+        .navigationTitle(viewModel.direction == .income ? "Доходы сегодня" : "Расходы сегодня")
+        .toolbar {
+          ToolbarItem(placement: .navigationBarTrailing) {
+            NavigationLink(
+              destination: TransactionsHistoryView(
+                direction: viewModel.direction,
+                currency: viewModel.currency
+              )
+            ) {
+              Image(systemName: "clock")
+                .tint(.navigationBar)
             }
           }
+        }
       }
       .onAppear {
-        
-      }
-      .task {
-        await viewModel.loadTransactions(for: direction)
+        viewModel.onViewAppear()
       }
     }
     .tint(.navigationBar)
@@ -106,37 +86,84 @@ struct TransactionsListView: View {
 }
 
 #Preview {
-  TransactionsListView(
-    direction: .income,
-    currency: .rub
-  )
+  TransactionsListView(viewModel: previewViewModel)
 }
+
+fileprivate let previewViewModel = TransactionsListViewModel(
+  direction: .income,
+  currency: .rub
+)
 
 // MARK: - ViewModel
 
 @Observable
 final class TransactionsListViewModel {
   
+  let direction: Direction
+  let currency: Currency
+  
   var startDate: Date = Calendar.current.startOfDay(
     for: Date()
   )
   var endDate: Date = Date()
+  var sortType: TransactionSortType = .date
+  
+  private let service: TransactionsService
   
   private(set) var transactions: [Transaction] = []
+  
   var totalAmount: Decimal {
     transactions.reduce(0) { result, transaction in
       result + transaction.amount
     }
   }
   
-  private let service: TransactionsService
-  
-  init(service: TransactionsService = TransactionsService()) {
+  init(
+    direction: Direction,
+    currency: Currency,
+    startDate: Date = Calendar.current.startOfDay(for: Date()),
+    endDate: Date = Date().advanced(by: 1),
+    sortType: TransactionSortType = .date,
+    service: TransactionsService = TransactionsService()
+  ) {
+    self.direction = direction
+    self.currency = currency
+    self.startDate = startDate
+    self.endDate = endDate
+    self.sortType = sortType
     self.service = service
   }
   
-  func loadTransactions(for direction: Direction) async {
-    let interval = DateInterval(start: startDate, end: endDate)
-    transactions = await service.getTransactions(for: direction, in: interval)
+  func onViewAppear() {
+    Task {
+      await loadTransactions()
+    }
   }
+  
+  func loadTransactions() async {
+    let result = await service.getTransactions(
+      for: direction,
+      in: DateInterval(start: startDate, end: endDate)
+    )
+    await MainActor.run {
+      self.transactions = sortedTransactions(result)
+    }
+  }
+  
+  private func sortedTransactions(_ transactions: [Transaction]) -> [Transaction] {
+    switch sortType {
+    case .date:
+      return transactions.sorted { $0.transactionDate > $1.transactionDate }
+    case .amount:
+      return transactions.sorted { abs($0.amount) > abs($1.amount) }
+    }
+  }
+  
+  // MARK: - Static Formatter
+  private let formatter: NumberFormatter = {
+    let formatter = NumberFormatter()
+    formatter.numberStyle = .decimal
+    formatter.locale = Locale(identifier: "ru_RU_POSIX")
+    return formatter
+  }()
 }

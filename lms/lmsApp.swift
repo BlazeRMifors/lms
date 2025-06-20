@@ -10,9 +10,15 @@ import SwiftUI
 @main
 struct lmsApp: App {
   
+  let viewModel: MainTabViewModel
+  
+  init() {
+    viewModel = MainTabViewModel(transactionService: TransactionsService())
+  }
+  
   var body: some Scene {
     WindowGroup {
-      MainTabView()
+      MainTabView(viewModel: viewModel)
     }
   }
 }
