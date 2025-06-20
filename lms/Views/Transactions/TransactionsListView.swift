@@ -83,7 +83,7 @@ struct TransactionsListView: View {
 
 #Preview {
   TransactionsListView(
-    direction: .income
+    direction: .outcome
   )
 }
 
@@ -91,7 +91,13 @@ struct TransactionsListView: View {
 
 @Observable
 final class TransactionsListViewModel {
-  var transactions: [Transaction] = []
+  
+  var startDate: Date = Calendar.current.startOfDay(
+    for: Date()
+  ).advanced(by: -30 * 86400)
+  var endDate: Date = Date()
+  
+  private(set) var transactions: [Transaction] = []
   var totalAmount: Decimal {
     transactions.reduce(0) { result, transaction in
       result + transaction.amount
@@ -102,19 +108,10 @@ final class TransactionsListViewModel {
   
   init(service: TransactionsService = TransactionsService()) {
     self.service = service
-    
-//    Task {
-//      await loadTransactions()
-//    }
   }
   
   func loadTransactions() async {
-    let startDate = Calendar.current.startOfDay(for: Date())
-    let endDate = Calendar.current.date(byAdding: .day, value: 1, to: startDate)!
     let interval = DateInterval(start: startDate, end: endDate)
-    
-//    MainActor.run {
-      transactions = await service.getTransactions(for: interval)
-//    }
+    transactions = await service.getTransactions(for: interval)
   }
 }

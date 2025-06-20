@@ -13,8 +13,10 @@ struct TransactionsHistoryView: View {
   let direction: Direction
   @State var viewModel = TransactionsHistoryViewModel()
   
-  @State var startDate = Date()
-  @State var endDate = Date()
+  @State private var startDate: Date = Calendar.current.startOfDay(
+    for: Date()
+  ).advanced(by: -30 * 86400)
+  @State private var endDate: Date = Date()
   
   var body: some View {
     VStack {
@@ -74,14 +76,44 @@ struct TransactionsHistoryView: View {
   private var startDateRow: some View {
     HStack {
       Text("Начало")
-      DatePicker("", selection: $startDate)
+      Spacer()
+      DatePicker("", selection: $startDate, displayedComponents: .date)
+        .labelsHidden()
+        .background(.accent.opacity(0.2))
+        .cornerRadius(8)
+        .onChange(of: startDate, { oldValue, newValue in
+          let adjustedStartDate = Calendar.current.startOfDay(for: newValue)
+          if adjustedStartDate > endDate {
+            // Если начало стало больше конца — выравниваем конец на начало
+            endDate = adjustedStartDate
+          }
+          startDate = adjustedStartDate
+        })
     }
   }
   
   private var endDateRow: some View {
     HStack {
       Text("Конец")
-      DatePicker("", selection: $startDate)
+      Spacer()
+      DatePicker("", selection: $endDate, displayedComponents: .date)
+        .labelsHidden()
+        .background(.accent.opacity(0.2))
+        .cornerRadius(8)
+        .onChange(of: endDate) { oldValue, newValue in
+          var components = Calendar.current.dateComponents([.year, .month, .day], from: newValue)
+          components.hour = 23
+          components.minute = 59
+          components.second = 59
+          guard let endOfDay = Calendar.current.date(from: components) else { return }
+          
+          if endOfDay < startDate {
+            // Если конец стал меньше начала — выравниваем начало на конец
+            startDate = Calendar.current.startOfDay(for: newValue)
+          } else {
+            endDate = endOfDay
+          }
+        }
     }
   }
   
