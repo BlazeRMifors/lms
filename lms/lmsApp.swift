@@ -9,9 +9,10 @@ import SwiftUI
 
 @main
 struct lmsApp: App {
-    var body: some Scene {
-        WindowGroup {
-            MainView()
-        }
+  
+  var body: some Scene {
+    WindowGroup {
+      Text("В разработке")
     }
+  }
 }

@@ -5,7 +5,14 @@
 //  Created by Ivan Isaev on 11.06.2025.
 //
 
-import Foundation
+import Foundation  
+
+protocol TransactionsServiceProtocol {
+  func getTransactions(for direction: Direction, in period: DateInterval) async -> [Transaction]
+  func create(transaction: Transaction) async
+  func update(transaction: Transaction) async
+  func delete(withId id: Int) async
+}
 
 protocol TransactionsServiceProtocol {
   func getTransactions(for direction: Direction, in period: DateInterval) async -> [Transaction]
