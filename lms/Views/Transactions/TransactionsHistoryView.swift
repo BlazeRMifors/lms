@@ -68,6 +68,16 @@ struct TransactionsHistoryView: View {
         }
       }
       .navigationTitle("Моя история")
+      .toolbar {
+        ToolbarItem(placement: .navigationBarTrailing) {
+          NavigationLink(
+            destination: Text("Экран в разработке")
+          ) {
+            Image(systemName: "document")
+              .tint(.navigationBar)
+          }
+        }
+      }
     }
     .task {
 //      await viewModel.loadTransactions(for: direction)
@@ -79,17 +89,19 @@ struct TransactionsHistoryView: View {
     HStack {
       Text("Начало")
       Spacer()
-      DatePicker("", selection: $startDate, displayedComponents: .date)
+      DatePicker("", selection: $viewModel.startDate, displayedComponents: .date)
         .labelsHidden()
         .background(.accent.opacity(0.2))
         .cornerRadius(8)
-        .onChange(of: startDate, { oldValue, newValue in
+        .tint(.accent)
+        .onChange(of: viewModel.startDate, { oldValue, newValue in
           let adjustedStartDate = Calendar.current.startOfDay(for: newValue)
           if adjustedStartDate > endDate {
             // Если начало стало больше конца — выравниваем конец на начало
             endDate = adjustedStartDate
           }
           startDate = adjustedStartDate
+          viewModel.loadTransactions(for: direction)
         })
     }
   }
@@ -98,11 +110,12 @@ struct TransactionsHistoryView: View {
     HStack {
       Text("Конец")
       Spacer()
-      DatePicker("", selection: $endDate, displayedComponents: .date)
+      DatePicker("", selection: $viewModel.endDate, displayedComponents: .date)
         .labelsHidden()
         .background(.accent.opacity(0.2))
         .cornerRadius(8)
-        .onChange(of: endDate) { oldValue, newValue in
+        .tint(.accent)
+        .onChange(of: viewModel.endDate) { oldValue, newValue in
           var components = Calendar.current.dateComponents([.year, .month, .day], from: newValue)
           components.hour = 23
           components.minute = 59
@@ -115,19 +128,19 @@ struct TransactionsHistoryView: View {
           } else {
             endDate = endOfDay
           }
+          viewModel.loadTransactions(for: direction)
         }
     }
   }
   
   private var sortRow: some View {
     HStack {
-//      Text("Сортировка")
-//      Spacer()
       Picker("Сортировка", selection: $viewModel.sortType) {
         Text("По дате").tag(TransactionSortType.date)
         Text("По сумме").tag(TransactionSortType.amount)
       }
-      .pickerStyle(.automatic)
+      .pickerStyle(.menu)
+      .tint(.primary)
       .onChange(of: viewModel.sortType) { oldValue, newValue in
 //        viewModel.transactions = viewModel.sortedTransactions(viewModel.transactions)
         viewModel.toggleSortType(newValue)
@@ -163,6 +176,14 @@ enum TransactionSortType {
 @Observable
 final class TransactionsHistoryViewModel {
   
+//  let direction: Direction
+//  let currency: Currency
+  
+  var startDate: Date = Calendar.current.startOfDay(
+    for: Date()
+  ).advanced(by: -30 * 86400)
+  var endDate: Date = Date()
+  
   var sortType: TransactionSortType = .date
   
   var transactions: [Transaction] = []
@@ -176,10 +197,6 @@ final class TransactionsHistoryViewModel {
   
   init(service: TransactionsService = TransactionsService()) {
     self.service = service
-    
-    //    Task {
-    //      await loadTransactions()
-    //    }
   }
   
 //  func loadTransactions() async {
@@ -194,10 +211,11 @@ final class TransactionsHistoryViewModel {
     Task {
       let result = await service.getTransactions(
         for: direction,
-        in: DateInterval(
-          start: Calendar.current.startOfDay(for: Date()),
-          end: Date()
-        )
+        in: DateInterval(start: startDate, end: endDate)
+//        in: DateInterval(
+//          start: Calendar.current.startOfDay(for: Date()),
+//          end: Date()
+//        )
       )
       await MainActor.run {
         self.transactions = sortedTransactions(result)
@@ -216,7 +234,7 @@ final class TransactionsHistoryViewModel {
     case .date:
       return transactions.sorted { $0.transactionDate > $1.transactionDate }
     case .amount:
-      return transactions.sorted { abs($0.amount) < abs($1.amount) }
+      return transactions.sorted { abs($0.amount) > abs($1.amount) }
     }
   }
 }

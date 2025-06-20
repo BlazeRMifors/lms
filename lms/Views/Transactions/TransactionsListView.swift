@@ -102,7 +102,6 @@ struct TransactionsListView: View {
       }
     }
     .tint(.navigationBar)
-//    .tint(.secondary)
   }
 }
 
