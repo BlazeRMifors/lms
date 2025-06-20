@@ -19,6 +19,6 @@ struct Category: Identifiable, Hashable {
   let isIncome: Bool
   
   var direction: Direction {
-      isIncome ? .income : .outcome
+    isIncome ? .income : .outcome
   }
 }

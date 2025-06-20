@@ -23,10 +23,10 @@ import Foundation
  
  TODO: LMS - Доработать, когда будут известны новые подробности по домашкам
  */
-struct Transaction: Identifiable {
-    let id: Int
-    let category: Category
-    let amount: Decimal
-    let transactionDate: Date
-    let comment: String?
+struct Transaction: Identifiable, Hashable {
+  let id: Int
+  let category: Category
+  let amount: Decimal
+  let transactionDate: Date
+  let comment: String?
 }
