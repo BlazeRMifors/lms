@@ -122,7 +122,7 @@ extension TransactionsFileCache {
     category: Category,
     amount: Decimal = 100,
     daysAgo: Int = 0,
-    comment: String? = "Тестовая транзакция"
+    comment: String? = nil
   ) -> Transaction {
     let calendar = Calendar.current
     let date = calendar.date(byAdding: .day, value: -daysAgo, to: Date()) ?? Date()
