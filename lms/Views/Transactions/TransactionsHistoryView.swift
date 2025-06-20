@@ -11,6 +11,8 @@ import Combine
 struct TransactionsHistoryView: View {
   
   let direction: Direction
+  let currency: Currency
+  
   @State var viewModel = TransactionsHistoryViewModel()
   
   @State private var startDate: Date = Calendar.current.startOfDay(
@@ -24,6 +26,7 @@ struct TransactionsHistoryView: View {
         
         startDateRow
         endDateRow
+        sortRow
         sumRow
         
         Section(
@@ -54,9 +57,7 @@ struct TransactionsHistoryView: View {
                 
                 Spacer()
                 
-                VStack(alignment: .trailing) {
-                  Text("\(transaction.amount)")
-                }
+                AmountView(amount: transaction.amount, currency: currency)
               }
               .frame(height: 44)
               .alignmentGuide(.listRowSeparatorLeading) { _ in
@@ -69,7 +70,8 @@ struct TransactionsHistoryView: View {
       .navigationTitle("Моя история")
     }
     .task {
-      await viewModel.loadTransactions()
+//      await viewModel.loadTransactions(for: direction)
+      viewModel.loadTransactions(for: direction)
     }
   }
   
@@ -117,11 +119,27 @@ struct TransactionsHistoryView: View {
     }
   }
   
+  private var sortRow: some View {
+    HStack {
+//      Text("Сортировка")
+//      Spacer()
+      Picker("Сортировка", selection: $viewModel.sortType) {
+        Text("По дате").tag(TransactionSortType.date)
+        Text("По сумме").tag(TransactionSortType.amount)
+      }
+      .pickerStyle(.automatic)
+      .onChange(of: viewModel.sortType) { oldValue, newValue in
+//        viewModel.transactions = viewModel.sortedTransactions(viewModel.transactions)
+        viewModel.toggleSortType(newValue)
+      }
+    }
+  }
+  
   private var sumRow: some View {
     HStack {
       Text("Сумма")
       Spacer()
-      Text("\(viewModel.totalAmount)")
+      AmountView(amount: viewModel.totalAmount, currency: currency)
     }
   }
 }
@@ -129,15 +147,24 @@ struct TransactionsHistoryView: View {
 #Preview {
   NavigationStack {
     TransactionsHistoryView(
-      direction: .income
+      direction: .income,
+      currency: .rub
     )
   }
 }
 
 // MARK: - ViewModel
 
+enum TransactionSortType {
+  case date
+  case amount
+}
+
 @Observable
 final class TransactionsHistoryViewModel {
+  
+  var sortType: TransactionSortType = .date
+  
   var transactions: [Transaction] = []
   var totalAmount: Decimal {
     transactions.reduce(0) { result, transaction in
@@ -155,13 +182,41 @@ final class TransactionsHistoryViewModel {
     //    }
   }
   
-  func loadTransactions() async {
-    let startDate = Calendar.current.startOfDay(for: Date())
-    let endDate = Calendar.current.date(byAdding: .day, value: 1, to: startDate)!
-    let interval = DateInterval(start: startDate, end: endDate)
-    
-    //    MainActor.run {
-    transactions = await service.getTransactions(for: .income, in: interval)
-    //    }
+//  func loadTransactions() async {
+//    let startDate = Calendar.current.startOfDay(for: Date())
+//    let endDate = Calendar.current.date(byAdding: .day, value: 1, to: startDate)!
+//    let interval = DateInterval(start: startDate, end: endDate)
+//    
+//    transactions = await service.getTransactions(for: .income, in: interval)
+//  }
+  
+  func loadTransactions(for direction: Direction) {
+    Task {
+      let result = await service.getTransactions(
+        for: direction,
+        in: DateInterval(
+          start: Calendar.current.startOfDay(for: Date()),
+          end: Date()
+        )
+      )
+      await MainActor.run {
+        self.transactions = sortedTransactions(result)
+      }
+    }
+  }
+  
+  func toggleSortType(_ sortType: TransactionSortType) {
+//    sortType = (sortType == .date) ? .amount : .date
+    self.sortType = sortType
+    transactions = sortedTransactions(transactions)
+  }
+  
+  private func sortedTransactions(_ transactions: [Transaction]) -> [Transaction] {
+    switch sortType {
+    case .date:
+      return transactions.sorted { $0.transactionDate > $1.transactionDate }
+    case .amount:
+      return transactions.sorted { abs($0.amount) < abs($1.amount) }
+    }
   }
 }

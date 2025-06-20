@@ -11,12 +11,12 @@ struct MainTabView: View {
   
   var body: some View {
     TabView {
-      TransactionsListView(direction: .outcome)
+      TransactionsListView(direction: .outcome, currency: .rub)
         .tabItem {
           Label("Расходы", image: "downtrend-icon")
         }
       
-      TransactionsListView(direction: .income)
+      TransactionsListView(direction: .income, currency: .rub)
         .tabItem {
           Label("Доходы", image: "uptrend-icon")
         }

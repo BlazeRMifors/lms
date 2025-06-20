@@ -11,6 +11,8 @@ import Combine
 struct TransactionsListView: View {
   
   let direction: Direction
+  let currency: Currency
+  
   @State var viewModel = TransactionsListViewModel()
   
   @State
@@ -32,9 +34,8 @@ struct TransactionsListView: View {
           HStack {
             Text("Всего")
             Spacer()
-            Text("\(formatter.string(from: viewModel.totalAmount as NSNumber) ?? "0") ₽")
+            AmountView(amount: viewModel.totalAmount, currency: currency)
           }
-//          OperationListView(operations: MockOperation.allCases)
           
           Section(
             header: Text("Операции")
@@ -42,18 +43,20 @@ struct TransactionsListView: View {
               .padding(.leading, 0)
           ) {
             ForEach(viewModel.transactions) { transaction in
-              NavigationLink(destination: Text("Экран в разработке").accentColor(.orange)) {
+              NavigationLink(
+                destination: Text("Экран в разработке")
+              ) {
                 HStack {
                   Text("\(transaction.category.emoji)")
                     .padding(6)
                     .background(
-                      Circle().fill(Color.accent.opacity(0.2))
+                      Circle().fill(Color.accent.opacity(0.12))
                     )
                   
                   VStack(alignment: .leading) {
                     Text(transaction.category.name)
                       .background()
-//                    
+                    
                     if let comment = transaction.comment {
                       Text(comment)
                         .font(.callout)
@@ -61,15 +64,14 @@ struct TransactionsListView: View {
                         .lineLimit(1)
                     }
                   }
-//                  
+                  
                   Spacer()
-//                  
-                  VStack(alignment: .trailing) {
-                    Text("\(transaction.amount)")
-                  }
+
+                  AmountView(amount: transaction.amount, currency: currency)
                 }
-//                OperationItemView(operation: operation)
-                  .frame(height: 44)
+                .frame(height: 44)
+//                  .frame(height: 36)
+//                  .padding(.vertical, 4)
                   .alignmentGuide(.listRowSeparatorLeading) { _ in
                     42
                   }
@@ -78,21 +80,36 @@ struct TransactionsListView: View {
           }
         }
           .navigationTitle(direction == .income ? "Доходы сегодня" : "Расходы сегодня")
-//          .navigationDestination(for: TransactionsListItemViewModel.self) { transaction in
-//            AccountView()
-//          }
+          .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+              NavigationLink(
+                destination: TransactionsHistoryView(
+                  direction: direction,
+                  currency: currency
+                )
+              ) {
+                Image(systemName: "clock")
+                  .tint(.navigationBar)
+              }
+            }
+          }
+      }
+      .onAppear {
+        
       }
       .task {
-        await viewModel.loadTransactions()
+        await viewModel.loadTransactions(for: direction)
       }
-      
     }
+    .tint(.navigationBar)
+//    .tint(.secondary)
   }
 }
 
 #Preview {
   TransactionsListView(
-    direction: .income
+    direction: .income,
+    currency: .rub
   )
 }
 
@@ -119,8 +136,8 @@ final class TransactionsListViewModel {
     self.service = service
   }
   
-  func loadTransactions() async {
+  func loadTransactions(for direction: Direction) async {
     let interval = DateInterval(start: startDate, end: endDate)
-    transactions = await service.getTransactions(for: .income, in: interval)
+    transactions = await service.getTransactions(for: direction, in: interval)
   }
 }
