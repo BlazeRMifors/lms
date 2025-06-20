@@ -10,15 +10,7 @@ import Combine
 
 struct TransactionsHistoryView: View {
   
-  let direction: Direction
-  let currency: Currency
-  
-  @State var viewModel = TransactionsHistoryViewModel()
-  
-  @State private var startDate: Date = Calendar.current.startOfDay(
-    for: Date()
-  ).advanced(by: -30 * 86400)
-  @State private var endDate: Date = Date()
+  @State var viewModel: TransactionsListViewModel
   
   var body: some View {
     VStack {
@@ -35,7 +27,7 @@ struct TransactionsHistoryView: View {
             .padding(.leading, 0)
         ) {
           ForEach(viewModel.transactions) { transaction in
-            NavigationLink(destination: Text("Экран в разработке").accentColor(.orange)) {
+            NavigationLink(destination: Text("Экран в разработке")) {
               HStack {
                 Text("\(transaction.category.emoji)")
                   .padding(6)
@@ -57,7 +49,7 @@ struct TransactionsHistoryView: View {
                 
                 Spacer()
                 
-                AmountView(amount: transaction.amount, currency: currency)
+                AmountView(amount: transaction.amount, currency: viewModel.currency)
               }
               .frame(height: 44)
               .alignmentGuide(.listRowSeparatorLeading) { _ in
@@ -79,9 +71,8 @@ struct TransactionsHistoryView: View {
         }
       }
     }
-    .task {
-//      await viewModel.loadTransactions(for: direction)
-      viewModel.loadTransactions(for: direction)
+    .onAppear {
+      viewModel.onViewAppear()
     }
   }
   
@@ -95,13 +86,7 @@ struct TransactionsHistoryView: View {
         .cornerRadius(8)
         .tint(.accent)
         .onChange(of: viewModel.startDate, { oldValue, newValue in
-          let adjustedStartDate = Calendar.current.startOfDay(for: newValue)
-          if adjustedStartDate > endDate {
-            // Если начало стало больше конца — выравниваем конец на начало
-            endDate = adjustedStartDate
-          }
-          startDate = adjustedStartDate
-          viewModel.loadTransactions(for: direction)
+          viewModel.updateStartDate(newValue)
         })
     }
   }
@@ -116,19 +101,7 @@ struct TransactionsHistoryView: View {
         .cornerRadius(8)
         .tint(.accent)
         .onChange(of: viewModel.endDate) { oldValue, newValue in
-          var components = Calendar.current.dateComponents([.year, .month, .day], from: newValue)
-          components.hour = 23
-          components.minute = 59
-          components.second = 59
-          guard let endOfDay = Calendar.current.date(from: components) else { return }
-          
-          if endOfDay < startDate {
-            // Если конец стал меньше начала — выравниваем начало на конец
-            startDate = Calendar.current.startOfDay(for: newValue)
-          } else {
-            endDate = endOfDay
-          }
-          viewModel.loadTransactions(for: direction)
+          viewModel.updateEndDate(newValue)
         }
     }
   }
@@ -142,7 +115,6 @@ struct TransactionsHistoryView: View {
       .pickerStyle(.menu)
       .tint(.primary)
       .onChange(of: viewModel.sortType) { oldValue, newValue in
-//        viewModel.transactions = viewModel.sortedTransactions(viewModel.transactions)
         viewModel.toggleSortType(newValue)
       }
     }
@@ -152,89 +124,13 @@ struct TransactionsHistoryView: View {
     HStack {
       Text("Сумма")
       Spacer()
-      AmountView(amount: viewModel.totalAmount, currency: currency)
+      AmountView(amount: viewModel.totalAmount, currency: viewModel.currency)
     }
   }
 }
 
 #Preview {
   NavigationStack {
-    TransactionsHistoryView(
-      direction: .income,
-      currency: .rub
-    )
-  }
-}
-
-// MARK: - ViewModel
-
-enum TransactionSortType {
-  case date
-  case amount
-}
-
-@Observable
-final class TransactionsHistoryViewModel {
-  
-//  let direction: Direction
-//  let currency: Currency
-  
-  var startDate: Date = Calendar.current.startOfDay(
-    for: Date()
-  ).advanced(by: -30 * 86400)
-  var endDate: Date = Date()
-  
-  var sortType: TransactionSortType = .date
-  
-  var transactions: [Transaction] = []
-  var totalAmount: Decimal {
-    transactions.reduce(0) { result, transaction in
-      result + transaction.amount
-    }
-  }
-  
-  private let service: TransactionsService
-  
-  init(service: TransactionsService = TransactionsService()) {
-    self.service = service
-  }
-  
-//  func loadTransactions() async {
-//    let startDate = Calendar.current.startOfDay(for: Date())
-//    let endDate = Calendar.current.date(byAdding: .day, value: 1, to: startDate)!
-//    let interval = DateInterval(start: startDate, end: endDate)
-//    
-//    transactions = await service.getTransactions(for: .income, in: interval)
-//  }
-  
-  func loadTransactions(for direction: Direction) {
-    Task {
-      let result = await service.getTransactions(
-        for: direction,
-        in: DateInterval(start: startDate, end: endDate)
-//        in: DateInterval(
-//          start: Calendar.current.startOfDay(for: Date()),
-//          end: Date()
-//        )
-      )
-      await MainActor.run {
-        self.transactions = sortedTransactions(result)
-      }
-    }
-  }
-  
-  func toggleSortType(_ sortType: TransactionSortType) {
-//    sortType = (sortType == .date) ? .amount : .date
-    self.sortType = sortType
-    transactions = sortedTransactions(transactions)
-  }
-  
-  private func sortedTransactions(_ transactions: [Transaction]) -> [Transaction] {
-    switch sortType {
-    case .date:
-      return transactions.sorted { $0.transactionDate > $1.transactionDate }
-    case .amount:
-      return transactions.sorted { abs($0.amount) > abs($1.amount) }
-    }
+    TransactionsHistoryView(viewModel: previewIncomeViewModel)
   }
 }

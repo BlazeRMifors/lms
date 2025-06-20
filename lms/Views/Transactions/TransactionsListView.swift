@@ -67,8 +67,7 @@ struct TransactionsListView: View {
           ToolbarItem(placement: .navigationBarTrailing) {
             NavigationLink(
               destination: TransactionsHistoryView(
-                direction: viewModel.direction,
-                currency: viewModel.currency
+                viewModel: viewModel.makeHistoryModel()
               )
             ) {
               Image(systemName: "clock")
@@ -86,15 +85,25 @@ struct TransactionsListView: View {
 }
 
 #Preview {
-  TransactionsListView(viewModel: previewViewModel)
+  TransactionsListView(viewModel: previewIncomeViewModel)
 }
 
-fileprivate let previewViewModel = TransactionsListViewModel(
+let previewIncomeViewModel = TransactionsListViewModel(
+  direction: .income,
+  currency: .rub
+)
+
+let previewOutcomeViewModel = TransactionsListViewModel(
   direction: .income,
   currency: .rub
 )
 
 // MARK: - ViewModel
+
+enum TransactionSortType {
+  case date
+  case amount
+}
 
 @Observable
 final class TransactionsListViewModel {
@@ -122,32 +131,72 @@ final class TransactionsListViewModel {
     direction: Direction,
     currency: Currency,
     startDate: Date = Calendar.current.startOfDay(for: Date()),
-    endDate: Date = Date().advanced(by: 1),
+    endDate: Date = Date(),
     sortType: TransactionSortType = .date,
     service: TransactionsService = TransactionsService()
   ) {
     self.direction = direction
     self.currency = currency
     self.startDate = startDate
-    self.endDate = endDate
+    self.endDate = endDate.advanced(by: 1)
     self.sortType = sortType
     self.service = service
   }
   
   func onViewAppear() {
+    loadTransactions()
+  }
+  
+  func loadTransactions() {
     Task {
-      await loadTransactions()
+      let result = await service.getTransactions(
+        for: direction,
+        in: DateInterval(start: startDate, end: endDate)
+      )
+      await MainActor.run {
+        self.transactions = sortedTransactions(result)
+      }
     }
   }
   
-  func loadTransactions() async {
-    let result = await service.getTransactions(
-      for: direction,
-      in: DateInterval(start: startDate, end: endDate)
+  func makeHistoryModel() -> TransactionsListViewModel {
+    Self.init(
+      direction: direction,
+      currency: currency,
+      startDate: Calendar.current.startOfDay(for: Date()).advanced(by: -30 * 86400),
+      service: service
     )
-    await MainActor.run {
-      self.transactions = sortedTransactions(result)
+  }
+  
+  func updateStartDate(_ newValue: Date) {
+    let adjustedStartDate = Calendar.current.startOfDay(for: newValue)
+    if adjustedStartDate > endDate {
+      // Если начало стало больше конца — выравниваем конец на начало
+      endDate = adjustedStartDate
     }
+    startDate = adjustedStartDate
+    loadTransactions()
+  }
+  
+  func updateEndDate(_ newValue: Date) {
+    var components = Calendar.current.dateComponents([.year, .month, .day], from: newValue)
+    components.hour = 23
+    components.minute = 59
+    components.second = 59
+    guard let endOfDay = Calendar.current.date(from: components) else { return }
+    
+    if endOfDay < startDate {
+      // Если конец стал меньше начала — выравниваем начало на конец
+      startDate = Calendar.current.startOfDay(for: newValue)
+    } else {
+      endDate = endOfDay
+    }
+    loadTransactions()
+  }
+  
+  func toggleSortType(_ sortType: TransactionSortType) {
+    self.sortType = sortType
+    transactions = sortedTransactions(transactions)
   }
   
   private func sortedTransactions(_ transactions: [Transaction]) -> [Transaction] {
