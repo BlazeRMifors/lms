@@ -12,7 +12,7 @@ struct lmsApp: App {
   
   var body: some Scene {
     WindowGroup {
-      Text("В разработке")
+      MainTabView()
     }
   }
 }
