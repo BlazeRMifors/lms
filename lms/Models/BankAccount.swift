@@ -27,21 +27,21 @@ import Foundation
  TODO: LMS - Доработать, когда будут известны новые подробности по домашкам
  */
 struct BankAccount: Identifiable {
-    let id: Int
-    let balance: Decimal
-    let currency: Currency
+  let id: Int
+  let balance: Decimal
+  let currency: Currency
 }
 
 enum Currency: String {
-    case rub = "RUB"
-    case usd = "USD"
-    case eur = "EUR"
-    
-    var symbol: String {
-        switch self {
-        case .rub: return "₽"
-        case .usd: return "$"
-        case .eur: return "€"
-        }
+  case rub = "RUB"
+  case usd = "USD"
+  case eur = "EUR"
+  
+  var symbol: String {
+    switch self {
+    case .rub: return "₽"
+    case .usd: return "$"
+    case .eur: return "€"
     }
+  }
 }
