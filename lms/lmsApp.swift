@@ -13,6 +13,8 @@ struct lmsApp: App {
   let viewModel: MainTabViewModel
   
   init() {
+    UITabBar.appearance().backgroundColor = .white
+    
     viewModel = MainTabViewModel(transactionService: TransactionsService())
   }
   
