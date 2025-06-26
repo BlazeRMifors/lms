@@ -32,10 +32,12 @@ struct BankAccount: Identifiable {
   let currency: Currency
 }
 
-enum Currency: String {
+enum Currency: String, CaseIterable, Identifiable {
   case rub = "RUB"
   case usd = "USD"
   case eur = "EUR"
+  
+  var id: String { rawValue }
   
   var symbol: String {
     switch self {

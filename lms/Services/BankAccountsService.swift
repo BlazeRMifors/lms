@@ -8,11 +8,11 @@
 import Foundation
 
 protocol BankAccountsServiceProtocol {
-  func getUserAccount() async -> BankAccount
-  func updateAccount(balance: Decimal, currency: Currency) async
+  func getUserAccount() async throws -> BankAccount
+  func updateAccount(balance: Decimal, currency: Currency) async throws
 }
 
-final class BankAccountsService {
+final class BankAccountsService: BankAccountsServiceProtocol {
   
   private var mockAccount = BankAccount(
     id: 1,
@@ -20,15 +20,22 @@ final class BankAccountsService {
     currency: .rub
   )
   
-  func getUserAccount() async -> BankAccount {
+  func getUserAccount() async throws -> BankAccount {
+    try await randomDelay()
     return mockAccount
   }
   
-  func updateAccount(balance: Decimal, currency: Currency) async {
+  func updateAccount(balance: Decimal, currency: Currency) async throws {
+    try await randomDelay()
     mockAccount = BankAccount(
       id: mockAccount.id,
       balance: balance,
       currency: currency
     )
+  }
+  
+  private func randomDelay(min: UInt64 = 1_000_000_000, max: UInt64 = 3_000_000_000) async throws {
+    let delay = UInt64.random(in: min...max)
+    try await Task.sleep(nanoseconds: delay)
   }
 }
