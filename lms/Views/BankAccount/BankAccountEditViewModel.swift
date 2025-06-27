@@ -24,7 +24,7 @@ final class BankAccountEditViewModel {
   }
   
   func updateBalance(_ text: String) {
-    let filteredText = text.filter { "-0123456789.".contains($0) }
+    let filteredText = text.filter { "-0123456789.,".contains($0) }
     let value = Decimal(string: filteredText) ?? 0
     balance = formatDecimal(value)
   }

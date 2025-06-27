@@ -52,8 +52,6 @@ struct BankAccountCoordinatorView: View {
       }
       .navigationTitle("Мой счет")
       .background(.bg)
-      .tint(.red)
-      .accentColor(.orange)
       .gesture(
         DragGesture()
           .onEnded { _ in
