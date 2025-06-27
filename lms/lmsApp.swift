@@ -15,7 +15,10 @@ struct lmsApp: App {
   init() {
     UITabBar.appearance().backgroundColor = .white
     
-    viewModel = MainTabViewModel(transactionService: TransactionsService())
+    viewModel = MainTabViewModel(
+      transactionService: TransactionsService(),
+      bankAccountService: BankAccountsService()
+    )
   }
   
   var body: some Scene {

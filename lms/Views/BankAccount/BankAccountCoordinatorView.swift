@@ -16,46 +16,70 @@ struct BankAccountCoordinatorView: View {
   
   var body: some View {
     NavigationStack {
-      switch coordinatorVM.currentState {
-      case .overview:
-        BankAccountOverviewView(viewModel: BankAccountOverviewViewModel(service: coordinatorVM.service))
-          .environmentObject(coordinatorVM)
-      case .edit:
-        if let account = coordinatorVM.account {
-          BankAccountEditView(viewModel: BankAccountEditViewModel(
-            service: coordinatorVM.service,
-            initialBalance: account.balance,
-            initialCurrency: account.currency
+      ScrollView {
+        switch coordinatorVM.currentState {
+        case .overview:
+          BankAccountOverviewView(viewModel: BankAccountOverviewViewModel(
+            balance: 1000,
+            currency: .rub
           ))
-          .environmentObject(coordinatorVM)
-        } else {
-          Text("Загрузка данных...")
+          .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+              Button {
+                coordinatorVM.enterEditMode()
+              } label: {
+                Text("Редактировать")
+              }
+            }
+          }
+        case .edit:
+          BankAccountEditView(
+            viewModel: BankAccountEditViewModel(
+              balance: 1000,
+              currency: .rub
+            )
+          )
+          .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+              Button {
+                coordinatorVM.cancelEdit()
+              } label: {
+                Text("Сохранить")
+              }
+            }
+          }
         }
       }
+      .navigationTitle("Мой счет")
+      .background(.bg)
+      .tint(.red)
+      .accentColor(.orange)
+      .gesture(
+        DragGesture()
+          .onEnded { _ in
+            hideKeyboard()
+          }
+      )
     }
-    .navigationTitle("Мой счет")
-    .toolbar {
-      ToolbarItem(placement: .navigationBarTrailing) {
-        Button {
-          coordinatorVM.enterEditMode()
-        } label: {
-          Text("Редактировать")
-        }
-      }
-    }
-//    .alert(item: $coordinatorVM.errorMessage) { error in
-//      Alert(title: Text("Ошибка"), message: Text(error), dismissButton: .default(Text("OK")))
-//    }
+    .tint(.navigationBar)
     .task {
       if coordinatorVM.account == nil {
         await coordinatorVM.loadAccount()
       }
     }
   }
+  
+  private func hideKeyboard() {
+    print("hideKeyboard")
+    UIApplication.shared.sendAction(
+      #selector(UIResponder.resignFirstResponder),
+      to: nil,
+      from: nil,
+      for: nil
+    )
+  }
 }
 
 #Preview {
-  NavigationStack {  
-    BankAccountCoordinatorView(service: BankAccountsService())
-  }
+  BankAccountCoordinatorView(service: BankAccountsService())
 }

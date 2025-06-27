@@ -8,57 +8,80 @@
 import SwiftUI
 
 struct BankAccountEditView: View {
-  @ObservedObject var viewModel: BankAccountEditViewModel
+  @State var viewModel: BankAccountEditViewModel
+  @State private var showingCurrencyPicker = false
   
   var body: some View {
-    Form {
+    VStack(spacing: 16) {
       balanceField
       currencyPicker
     }
-    .navigationTitle("Редактирование")
-    .toolbar {
-      ToolbarItem(placement: .navigationBarLeading) {
-        Button("Отмена") {
-          viewModel.cancelChanges()
-        }
-      }
-      ToolbarItem(placement: .navigationBarTrailing) {
-        Button("Сохранить") {
-          Task {
-            await viewModel.saveChanges()
-          }
-        }
-      }
-    }
+    .padding()
   }
   
   private var balanceField: some View {
     HStack {
-      Text("💰 Баланс")
+      Text("💰")
+      Text("Баланс").padding(.leading, 10)
       Spacer()
-      TextField("", text: $viewModel.balanceText)
-        .keyboardType(.decimalPad)
+      TextField("", text: $viewModel.balance)
+        .keyboardType(.numbersAndPunctuation)
         .multilineTextAlignment(.trailing)
-        .onTapGesture {
-          showKeyboardInput()
+        .onChange(of: viewModel.balance) { oldValue, newValue in
+          viewModel.updateBalance(newValue)
         }
+        .tint(.gray)
+        .foregroundColor(.gray)
+        .font(.title3)
     }
+    .padding()
+    .background(.white)
+    .cornerRadius(10)
   }
   
   private var currencyPicker: some View {
-    Picker("Валюта", selection: $viewModel.selectedCurrency) {
-      ForEach(Currency.allCases) { currency in
-        Text(currency.rawValue).tag(currency)
+    HStack {
+      Text("Валюта")
+      Spacer()
+      Button(action: {
+        showingCurrencyPicker = true
+      }) {
+        HStack {
+          Text(viewModel.currency.symbol)
+            .font(.title3)
+            .foregroundColor(.gray)
+          Image(systemName: "chevron.right")
+            .padding(.leading, 10)
+            .tint(.gray)
+        }
       }
     }
+    .padding()
+    .background(.white)
+    .cornerRadius(10)
+    .actionSheet(isPresented: $showingCurrencyPicker) {
+      ActionSheet(
+        title: Text("Валюта"),
+        buttons: Currency.allCases.map { currency in
+            .default(
+              Text(currency.description)
+            ) {
+              guard currency != viewModel.currency else { return }
+              viewModel.currency = currency
+            }
+        }
+      )
+    }
   }
-  
-  private func showKeyboardInput() {
-    let controller = InputViewController { input in
-      viewModel.updateBalance(input)
-    }
-    DispatchQueue.main.async {
-      UIApplication.shared.windows.first?.rootViewController?.present(controller, animated: true)
-    }
+}
+
+#Preview {
+  let vm = BankAccountEditViewModel(
+    balance: -670000,
+    currency: .rub
+  )
+  ZStack {
+    Rectangle().fill(.gray.opacity(0.15))
+    BankAccountEditView(viewModel: vm)
   }
 }
