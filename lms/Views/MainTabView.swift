@@ -23,10 +23,7 @@ struct MainTabView: View {
           Label("Доходы", image: "uptrend-icon")
         }
       
-      NavigationStack {
-        Text("Экран в разработке")
-          .navigationTitle("Мой счет")
-      }
+      BankAccountCoordinatorView(service: viewModel.bankAccountService)
         .tabItem {
           Label("Счет", image: "account-icon")
         }
@@ -47,6 +44,9 @@ struct MainTabView: View {
           Label("Настройки", image: "settings-icon")
         }
     }
+    .onAppear {
+      viewModel.onAppear()
+    }
   }
 }
 
@@ -57,23 +57,40 @@ struct MainTabView: View {
 @Observable
 final class MainTabViewModel {
   
-  var currency = Currency.rub
-  var transactionService: TransactionsService
+  private(set) var currency = Currency.rub
+  private(set) var transactionService: TransactionsService
+  private(set) var bankAccountService: BankAccountsService
   
   let incomeModel: TransactionsListViewModel
   let outcomeModel: TransactionsListViewModel
   
   init(
     transactionService: TransactionsService,
-    currency: Currency = .rub
+    bankAccountService: BankAccountsService,
   ) {
     self.transactionService = transactionService
+    self.bankAccountService = bankAccountService
+    
+    let currency: Currency = .rub 
     self.currency = currency
     self.incomeModel = TransactionsListViewModel(direction: .income, currency: currency)
     self.outcomeModel = TransactionsListViewModel(direction: .outcome, currency: currency)
   }
+  
+  func onAppear() {
+    Task {
+      let account = try? await bankAccountService.getUserAccount()
+      if let account {
+        await MainActor.run { [weak self] in
+          guard let self else { return }
+          self.currency = account.currency
+        }
+      }
+    }
+  }
 }
 
 fileprivate let previewMainTabViewModel = MainTabViewModel(
-  transactionService: TransactionsService()
+  transactionService: TransactionsService(),
+  bankAccountService: BankAccountsService()
 )
