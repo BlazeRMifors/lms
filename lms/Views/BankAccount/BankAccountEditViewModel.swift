@@ -12,9 +12,12 @@ final class BankAccountEditViewModel {
   var balance: String = "0"
   var currency: Currency = .rub
   
-  init(balance: Decimal, currency: Currency) {
+  var onSave: ((Decimal, Currency) -> Void)?
+  
+  init(balance: Decimal, currency: Currency, onSave: ((Decimal, Currency) -> Void)? = nil) {
     self.balance = formatDecimal(balance)
     self.currency = currency
+    self.onSave = onSave
   }
   
   private func formatDecimal(_ value: Decimal) -> String {
@@ -24,8 +27,18 @@ final class BankAccountEditViewModel {
   }
   
   func updateBalance(_ text: String) {
-    let filteredText = text.filter { "-0123456789.,".contains($0) }
-    let value = Decimal(string: filteredText) ?? 0
+    let filteredText = text.filter { "-0123456789., ".contains($0) }
+    
+    let formatter = NumberFormatter()
+    formatter.numberStyle = .decimal
+    let value = formatter.number(from: filteredText)?.decimalValue ?? 0
     balance = formatDecimal(value)
+  }
+  
+  func save() {
+    let formatter = NumberFormatter()
+    formatter.numberStyle = .decimal
+    let balanceValue = formatter.number(from: balance)?.decimalValue ?? 0
+    onSave?(balanceValue, currency)
   }
 }
