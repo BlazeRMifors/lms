@@ -14,6 +14,7 @@ struct BankAccountOverviewView: View {
     VStack(spacing: 16) {
       balanceRow
         .onShake {
+          print("Shake detected! Toggling balance visibility")
           viewModel.toggleBalanceVisibility()
         }
       currencyRow
@@ -56,11 +57,6 @@ struct BankAccountOverviewView: View {
     currency: .rub,
     isBalanceHidden: true
   )
-  BankAccountOverviewView(viewModel: viewModel)
   
-  Button {
-    viewModel.toggleBalanceVisibility()
-  } label: {
-    Text("Спойлер Вкл/Выкл")
-  }
+  BankAccountOverviewView(viewModel: viewModel)
 }
