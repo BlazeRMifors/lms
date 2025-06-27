@@ -27,9 +27,14 @@ class BankAccountCoordinatorViewModel: ObservableObject {
   // MARK: - Load Account
   func loadAccount() async {
     do {
-      account = try await service.getUserAccount()
+      let loadedAccount = try await service.getUserAccount()
+      await MainActor.run {
+        account = loadedAccount
+      }
     } catch {
-      errorMessage = "Ошибка загрузки данных: \(error.localizedDescription)"
+      await MainActor.run {
+        errorMessage = "Ошибка загрузки данных: \(error.localizedDescription)"
+      }
     }
   }
   
@@ -41,12 +46,17 @@ class BankAccountCoordinatorViewModel: ObservableObject {
   
   // MARK: - Save Changes
   func saveChanges(balance: Decimal, currency: Currency) async {
+    print("balance: \(balance), currency: \(currency)")
     do {
       try await service.updateAccount(balance: balance, currency: currency)
-      account = BankAccount(id: account?.id ?? 1, balance: balance, currency: currency)
-      currentState = .overview
+      await MainActor.run {
+        account = BankAccount(id: account?.id ?? 1, balance: balance, currency: currency)
+        currentState = .overview
+      }
     } catch {
-      errorMessage = "Ошибка сохранения: \(error.localizedDescription)"
+      await MainActor.run {
+        errorMessage = "Ошибка сохранения: \(error.localizedDescription)"
+      }
     }
   }
   

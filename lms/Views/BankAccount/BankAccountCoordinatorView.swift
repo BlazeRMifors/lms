@@ -10,6 +10,7 @@ import SwiftUI
 struct BankAccountCoordinatorView: View {
   @StateObject private var coordinatorVM: BankAccountCoordinatorViewModel
   @State private var overviewVM: BankAccountOverviewViewModel?
+  @State private var editVM: BankAccountEditViewModel?
   
   init(service: BankAccountsServiceProtocol) {
     _coordinatorVM = StateObject(wrappedValue: BankAccountCoordinatorViewModel(service: service))
@@ -25,6 +26,18 @@ struct BankAccountCoordinatorView: View {
               .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                   Button {
+                    // Создаем editVM с колбэком для сохранения
+                    editVM = BankAccountEditViewModel(
+                      balance: coordinatorVM.account?.balance ?? 0,
+                      currency: coordinatorVM.account?.currency ?? .rub,
+                      onSave: { balance, currency in
+                        Task {
+                          await coordinatorVM.saveChanges(balance: balance, currency: currency)
+                          // Обновляем данные в overviewVM
+                          self.overviewVM?.updateData(balance: balance, currency: currency)
+                        }
+                      }
+                    )
                     coordinatorVM.enterEditMode()
                   } label: {
                     Text("Редактировать")
@@ -33,21 +46,17 @@ struct BankAccountCoordinatorView: View {
               }
           }
         case .edit:
-          BankAccountEditView(
-            viewModel: BankAccountEditViewModel(
-              balance: coordinatorVM.account?.balance ?? 0,
-              currency: coordinatorVM.account?.currency ?? .rub
-            )
-          )
-          .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-              Button {
-                // TODO: Получить данные из BankAccountEditViewModel и сохранить
-                coordinatorVM.cancelEdit()
-              } label: {
-                Text("Сохранить")
+          if let editVM = editVM {
+            BankAccountEditView(viewModel: editVM)
+              .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                  Button {
+                    editVM.save()
+                  } label: {
+                    Text("Сохранить")
+                  }
+                }
               }
-            }
           }
         }
       }
