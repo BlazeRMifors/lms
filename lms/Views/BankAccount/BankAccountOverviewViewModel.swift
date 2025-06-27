@@ -9,11 +9,15 @@ import SwiftUI
 
 @Observable
 final class BankAccountOverviewViewModel {
-  private(set) var balance: Decimal = 0
-  private(set) var currency: Currency = .rub
-  private(set) var isBalanceHidden = false
+  private let service: BankAccountsServiceProtocol
   
-  init(balance: Decimal, currency: Currency, isBalanceHidden: Bool = false) {
+  var balance: Decimal = 0
+  var currency: Currency = .rub
+  private(set) var isBalanceHidden = false
+  private(set) var isLoading = false
+  
+  init(service: BankAccountsServiceProtocol, balance: Decimal, currency: Currency, isBalanceHidden: Bool = false) {
+    self.service = service
     self.balance = balance
     self.currency = currency
     self.isBalanceHidden = isBalanceHidden
@@ -21,5 +25,29 @@ final class BankAccountOverviewViewModel {
   
   func toggleBalanceVisibility() {
     isBalanceHidden.toggle()
+  }
+  
+  func updateData(balance: Decimal, currency: Currency) {
+    self.balance = balance
+    self.currency = currency
+  }
+  
+  @MainActor
+  func refreshData() async {
+    print("refreshData started")
+    isLoading = true
+    
+    do {
+      let account = try await service.getUserAccount()
+      print("Received account: balance=\(account.balance), currency=\(account.currency)")
+      balance = account.balance
+      currency = account.currency
+    } catch {
+      // В реальном приложении здесь можно показать ошибку
+      print("Ошибка при обновлении данных: \(error)")
+    }
+    
+    isLoading = false
+    print("refreshData completed")
   }
 }
