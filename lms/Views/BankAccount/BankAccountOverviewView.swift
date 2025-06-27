@@ -49,7 +49,9 @@ struct BankAccountOverviewView: View {
 }
 
 #Preview {
+  let service = BankAccountsService()
   let viewModel = BankAccountOverviewViewModel(
+    service: service,
     balance: -670000,
     currency: .rub,
     isBalanceHidden: true
