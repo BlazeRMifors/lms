@@ -10,6 +10,7 @@ import SwiftUI
 struct BankAccountEditView: View {
   @State var viewModel: BankAccountEditViewModel
   @State private var showingCurrencyPicker = false
+  @FocusState private var isBalanceFieldFocused: Bool
   
   var body: some View {
     ZStack {
@@ -35,6 +36,15 @@ struct BankAccountEditView: View {
         )
       }
     }
+    .contentShape(Rectangle())
+    .ignoresSafeArea(.all, edges: .all)
+    .simultaneousGesture(
+      DragGesture()
+        .onEnded { _ in
+          // Скрываем клавиатуру при свайпе по экрану
+          isBalanceFieldFocused = false
+        }
+    )
   }
   
   private var balanceField: some View {
@@ -43,8 +53,13 @@ struct BankAccountEditView: View {
       Text("Баланс").padding(.leading, 10)
       Spacer()
       TextField("", text: $viewModel.balance)
-        .keyboardType(.numbersAndPunctuation)
+        .keyboardType(.decimalPad)
         .multilineTextAlignment(.trailing)
+        .focused($isBalanceFieldFocused)
+        .onTapGesture {
+          // При нажатии на текстовое поле фокусируемся на нем
+          isBalanceFieldFocused = true
+        }
         .onChange(of: viewModel.balance) { oldValue, newValue in
           viewModel.updateBalance(newValue)
         }
@@ -55,6 +70,10 @@ struct BankAccountEditView: View {
     .padding()
     .background(.white)
     .cornerRadius(10)
+    .onTapGesture {
+      // При нажатии на всю ячейку также фокусируемся на текстовом поле
+      isBalanceFieldFocused = true
+    }
   }
   
   private var currencyPicker: some View {
@@ -108,10 +127,7 @@ struct CustomActionSheet: View {
         Spacer()
         actionSheetContent
       }
-      .transition(.asymmetric(
-        insertion: .move(edge: .bottom).combined(with: .opacity),
-        removal: .move(edge: .bottom).combined(with: .opacity)
-      ))
+      .ignoresSafeArea(.container, edges: .bottom)
     }
   }
   
@@ -121,9 +137,9 @@ struct CustomActionSheet: View {
       actionSheetOptions
     }
     .background(Color(.systemBackground))
-    .cornerRadius(13)
+    .clipShape(RoundedRectangle(cornerRadius: 13))
     .padding(.horizontal, 16)
-    .padding(.bottom, 34)
+    .padding(.bottom, 20)
     .offset(y: dragOffset)
     .gesture(dragGesture)
   }
