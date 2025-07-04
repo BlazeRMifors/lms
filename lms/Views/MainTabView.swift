@@ -28,10 +28,7 @@ struct MainTabView: View {
           Label("Счет", image: "account-icon")
         }
       
-      NavigationStack {
-        Text("Экран в разработке")
-          .navigationTitle("Мои статьи")
-      }
+      CategoriesView(viewModel: .init(categoriesService: viewModel.categoriesService))
         .tabItem {
           Label("Статьи", image: "categories-icon")
         }
@@ -60,6 +57,7 @@ final class MainTabViewModel {
   private(set) var currency = Currency.rub
   private(set) var transactionService: TransactionsService
   private(set) var bankAccountService: BankAccountsService
+  private(set) var categoriesService: CategoriesService
   
   let incomeModel: TransactionsListViewModel
   let outcomeModel: TransactionsListViewModel
@@ -67,9 +65,11 @@ final class MainTabViewModel {
   init(
     transactionService: TransactionsService,
     bankAccountService: BankAccountsService,
+    categoriesService: CategoriesService = CategoriesService()
   ) {
     self.transactionService = transactionService
     self.bankAccountService = bankAccountService
+    self.categoriesService = categoriesService
     
     let currency: Currency = .rub 
     self.currency = currency
@@ -92,5 +92,6 @@ final class MainTabViewModel {
 
 fileprivate let previewMainTabViewModel = MainTabViewModel(
   transactionService: TransactionsService(),
-  bankAccountService: BankAccountsService()
+  bankAccountService: BankAccountsService(),
+  categoriesService: CategoriesService()
 )
