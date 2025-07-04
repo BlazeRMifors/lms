@@ -20,34 +20,37 @@ struct CategoriesView: View {
   
   var body: some View {
     NavigationStack {
-      List {
-        Section(header: Text("статьи")
-          .font(.subheadline)
-        ) {
-          ForEach(viewModel.filteredCategories) { category in
-            HStack {
-              Text(String(category.emoji))
-                .font(.footnote)
-                .padding(Constants.emojiPadding)
-                .background(
-                  Circle().fill(.accent.opacity(Constants.emojiBackgroundOpacity))
-                )
-              Text(category.name)
-                .padding(.leading, Constants.nameLeadingPadding)
-            }
-            .alignmentGuide(.listRowSeparatorLeading) { _ in
-              Constants.listRowSeparatorLeading
+      ZStack {
+        if viewModel.isLoading {
+          ProgressView()
+        }
+        List {
+          Section(header: Text("статьи")
+            .font(.subheadline)
+          ) {
+            ForEach(viewModel.filteredCategories) { category in
+              HStack {
+                Text(String(category.emoji))
+                  .font(.footnote)
+                  .padding(Constants.emojiPadding)
+                  .background(
+                    Circle().fill(.accent.opacity(Constants.emojiBackgroundOpacity))
+                  )
+                Text(category.name)
+                  .padding(.leading, Constants.nameLeadingPadding)
+              }
+              .alignmentGuide(.listRowSeparatorLeading) { _ in
+                Constants.listRowSeparatorLeading
+              }
             }
           }
         }
+        .opacity(viewModel.isLoading ? 0 : 1)
       }
       .navigationTitle("Мои статьи")
       .searchable(text: $viewModel.searchText, placement: .navigationBarDrawer(displayMode: .always))
       .onChange(of: viewModel.searchText) { _, newValue in
         viewModel.updateSearch(text: newValue)
-      }
-      .onAppear {
-        Task { await viewModel.loadCategories() }
       }
     }
   }
