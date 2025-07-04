@@ -17,14 +17,18 @@ final class CategoriesViewModel {
   
   init(categoriesService: CategoriesService) {
     self.categoriesService = categoriesService
-    Task { await loadCategories() }
+    Task.detached { [weak self] in
+      await self?.loadCategories()
+    }
   }
   
-  @MainActor
   func loadCategories() async {
     let categories = await categoriesService.getAllCategories()
-    self.allCategories = categories
-    self.filteredCategories = categories
+    await MainActor.run { [weak self] in
+      guard let self = self else { return }
+      self.allCategories = categories
+      self.filteredCategories = categories
+    }
   }
   
   func updateSearch(text: String) {
