@@ -14,6 +14,8 @@ struct lmsApp: App {
   
   init() {
     UITabBar.appearance().backgroundColor = .white
+    UITextField.appearance(whenContainedInInstancesOf: [UISearchBar.self]).tintColor = .action
+    UISearchBar.appearance().tintColor = .action
     
     viewModel = MainTabViewModel(
       transactionService: TransactionsService(),
