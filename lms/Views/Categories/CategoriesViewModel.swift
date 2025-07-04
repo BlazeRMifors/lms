@@ -12,23 +12,33 @@ final class CategoriesViewModel {
   var searchText: String = ""
   private(set) var allCategories: [Category] = []
   private(set) var filteredCategories: [Category] = []
+  private(set) var isLoading: Bool = false
   
   private let categoriesService: CategoriesService
   
   init(categoriesService: CategoriesService) {
     self.categoriesService = categoriesService
-    Task.detached { [weak self] in
-      await self?.loadCategories()
+    self.loadCategories()
+  }
+  
+  private func loadCategories() {
+    Task.detached { [categoriesService, weak self] in
+      await self?.runLoadingCategories()
+      let categories = await categoriesService.getAllCategories()
+      await self?.updateCategories(categories)
     }
   }
   
-  func loadCategories() async {
-    let categories = await categoriesService.getAllCategories()
-    await MainActor.run { [weak self] in
-      guard let self = self else { return }
-      self.allCategories = categories
-      self.filteredCategories = categories
-    }
+  @MainActor
+  private func runLoadingCategories() {
+    isLoading = true
+  }
+  
+  @MainActor
+  private func updateCategories(_ categories: [Category]) {
+    allCategories = categories
+    filteredCategories = categories
+    isLoading = false
   }
   
   func updateSearch(text: String) {
