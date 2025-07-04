@@ -28,7 +28,7 @@ struct MainTabView: View {
           Label("Счет", image: "account-icon")
         }
       
-      CategoriesView(viewModel: .init(categoriesService: viewModel.categoriesService))
+      CategoriesView(viewModel: CategoriesViewModel(categoriesService: viewModel.categoriesService))
         .tabItem {
           Label("Статьи", image: "categories-icon")
         }
