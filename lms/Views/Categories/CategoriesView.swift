@@ -8,6 +8,14 @@
 import SwiftUI
 
 struct CategoriesView: View {
+  
+  private enum Constants {
+    static let emojiPadding: CGFloat = 4
+    static let emojiBackgroundOpacity: Double = 0.2
+    static let nameLeadingPadding: CGFloat = 6
+    static let listRowSeparatorLeading: CGFloat = 40
+  }
+  
   @State var viewModel: CategoriesViewModel
   
   var body: some View {
@@ -20,15 +28,15 @@ struct CategoriesView: View {
             HStack {
               Text(String(category.emoji))
                 .font(.footnote)
-                .padding(4)
+                .padding(Constants.emojiPadding)
                 .background(
-                  Circle().fill(Color.accent.opacity(0.2))
+                  Circle().fill(.accent.opacity(Constants.emojiBackgroundOpacity))
                 )
               Text(category.name)
-                .padding(.leading, 6)
+                .padding(.leading, Constants.nameLeadingPadding)
             }
             .alignmentGuide(.listRowSeparatorLeading) { _ in
-              40
+              Constants.listRowSeparatorLeading
             }
           }
         }
