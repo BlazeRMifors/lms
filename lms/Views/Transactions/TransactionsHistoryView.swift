@@ -11,6 +11,7 @@ import Combine
 struct TransactionsHistoryView: View {
   
   @State var viewModel: TransactionsListViewModel
+  @State private var showAnalysis = false
   
   var body: some View {
     VStack {
@@ -62,11 +63,13 @@ struct TransactionsHistoryView: View {
       .navigationTitle("Моя история")
       .toolbar {
         ToolbarItem(placement: .navigationBarTrailing) {
-          NavigationLink(
-            destination: Text("Экран в разработке")
-          ) {
-            Image(systemName: "document")
-              .tint(.navigationBar)
+          HStack {
+            NavigationLink(
+              destination: AnalysisViewControllerRepresentable(viewModel: viewModel)
+            ) {
+              Image(systemName: "document")
+                .tint(.navigationBar)
+            }
           }
         }
       }
