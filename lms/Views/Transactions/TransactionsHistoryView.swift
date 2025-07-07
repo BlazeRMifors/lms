@@ -65,7 +65,10 @@ struct TransactionsHistoryView: View {
         ToolbarItem(placement: .navigationBarTrailing) {
           HStack {
             NavigationLink(
-              destination: AnalysisViewControllerRepresentable(viewModel: viewModel)
+              destination:
+                AnalysisViewControllerRepresentable(viewModel: viewModel)
+                .navigationTitle("Анализ")
+                .background(.bg)
             ) {
               Image(systemName: "document")
                 .tint(.navigationBar)

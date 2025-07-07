@@ -49,13 +49,6 @@ class AnalysisViewController: UIViewController {
     }
 
     private func setupUI() {
-        if #available(iOS 13.0, *) {
-            view.backgroundColor = UIColor(named: "BgColor") ?? UIColor.systemGroupedBackground
-        } else {
-            view.backgroundColor = .white
-        }
-        title = "Анализ"
-
         view.addSubview(tableView)
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor).isActive = true
