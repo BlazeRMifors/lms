@@ -17,6 +17,7 @@ final class AnalysisViewController: UIViewController {
   // MARK: - UI
   private let tableView = UITableView(frame: .zero, style: .insetGrouped)
   private var viewModel: AnalysisViewModel
+  var onTransactionSelected: ((Transaction) -> Void)?
   
   init(viewModel: AnalysisViewModel) {
     self.viewModel = viewModel
@@ -140,5 +141,15 @@ extension AnalysisViewController: UITableViewDataSource, UITableViewDelegate {
       cell.configure(with: vm)
       return cell
     }
+  }
+  
+  func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    tableView.deselectRow(at: indexPath, animated: true)
+    
+    // Обрабатываем только ячейки транзакций
+    guard indexPath.section == Section.operations.rawValue else { return }
+    
+    let transaction = viewModel.transactions[indexPath.row]
+    onTransactionSelected?(transaction)
   }
 }
