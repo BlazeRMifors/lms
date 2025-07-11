@@ -28,19 +28,18 @@ final class AnalysisSumCell: UITableViewCell {
   }
   
   private func setupUI() {
+    setupSubviews()
     addSubviews()
     setupLayout()
   }
   
-  private func addSubviews() {
+  private func setupSubviews() {
     titleLabel.text = "Сумма"
-    titleLabel.font = .systemFont(ofSize: 16)
-    amountLabel.font = .systemFont(ofSize: 16, weight: .regular)
-    stack.axis = .horizontal
-    stack.spacing = 8
     stack.alignment = .center
+  }
+  
+  private func addSubviews() {
     stack.addArrangedSubview(titleLabel)
-    stack.addArrangedSubview(UIView())
     stack.addArrangedSubview(amountLabel)
     contentView.addSubview(stack)
   }
