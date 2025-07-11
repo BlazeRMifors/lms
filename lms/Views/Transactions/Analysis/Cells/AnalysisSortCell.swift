@@ -18,7 +18,6 @@ final class AnalysisSortCell: UITableViewCell {
   
   private let titleLabel = UILabel()
   private let sortButton = UIButton(type: .system)
-  private let stack = UIStackView()
   
   override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
     super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -57,8 +56,6 @@ final class AnalysisSortCell: UITableViewCell {
     
     sortButton.configuration = config
     sortButton.semanticContentAttribute = .forceRightToLeft
-    
-    stack.alignment = .center
   }
   
   private func setupMenu() {
@@ -74,18 +71,22 @@ final class AnalysisSortCell: UITableViewCell {
   }
   
   private func addSubviews() {
-    stack.addArrangedSubview(titleLabel)
-    stack.addArrangedSubview(sortButton)
-    contentView.addSubview(stack)
+    contentView.addSubview(titleLabel)
+    contentView.addSubview(sortButton)
   }
   
   private func setupLayout() {
-    stack.translatesAutoresizingMaskIntoConstraints = false
+    titleLabel.translatesAutoresizingMaskIntoConstraints = false
+    sortButton.translatesAutoresizingMaskIntoConstraints = false
+    
     NSLayoutConstraint.activate([
-      stack.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 4),
-      stack.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -4),
-      stack.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-      stack.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16)
+      titleLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+      titleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16)
+    ])
+    
+    NSLayoutConstraint.activate([
+      sortButton.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+      sortButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16)
     ])
   }
   

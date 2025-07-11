@@ -16,7 +16,6 @@ final class AnalysisSumCell: UITableViewCell {
   
   private let titleLabel = UILabel()
   private let amountLabel = UILabel()
-  private let stack = UIStackView()
   
   override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
     super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -35,22 +34,25 @@ final class AnalysisSumCell: UITableViewCell {
   
   private func setupSubviews() {
     titleLabel.text = "Сумма"
-    stack.alignment = .center
   }
   
   private func addSubviews() {
-    stack.addArrangedSubview(titleLabel)
-    stack.addArrangedSubview(amountLabel)
-    contentView.addSubview(stack)
+    contentView.addSubview(titleLabel)
+    contentView.addSubview(amountLabel)
   }
   
   private func setupLayout() {
-    stack.translatesAutoresizingMaskIntoConstraints = false
+    titleLabel.translatesAutoresizingMaskIntoConstraints = false
+    amountLabel.translatesAutoresizingMaskIntoConstraints = false
+    
     NSLayoutConstraint.activate([
-      stack.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 4),
-      stack.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -4),
-      stack.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-      stack.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16)
+      titleLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+      titleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16)
+    ])
+    
+    NSLayoutConstraint.activate([
+      amountLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+      amountLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16)
     ])
   }
   

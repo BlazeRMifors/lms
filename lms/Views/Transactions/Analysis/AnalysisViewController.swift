@@ -74,7 +74,6 @@ class AnalysisViewController: UIViewController {
         tableView.dataSource = self
         tableView.delegate = self
         tableView.register(AnalysisTransactionCell.self, forCellReuseIdentifier: "TransactionCell")
-        tableView.register(AnalysisFilterCell.self, forCellReuseIdentifier: "FilterCell")
         tableView.register(AnalysisSumCell.self, forCellReuseIdentifier: "SumCell")
         tableView.register(AnalysisDateCell.self, forCellReuseIdentifier: "DateCell")
         tableView.register(AnalysisSortCell.self, forCellReuseIdentifier: "SortCell")
@@ -108,24 +107,22 @@ extension AnalysisViewController: UITableViewDataSource, UITableViewDelegate {
             switch indexPath.row {
             case 0:
                 let cell = tableView.dequeueReusableCell(withIdentifier: "DateCell", for: indexPath) as! AnalysisDateCell
-                let picker = UIDatePicker()
-                picker.datePickerMode = .date
-                picker.preferredDatePickerStyle = .compact
-                picker.locale = Locale(identifier: "ru_RU")
-                picker.date = viewModel?.startDate ?? Date()
-                picker.addTarget(self, action: #selector(startDateChanged(_:)), for: .valueChanged)
-                cell.configureWithPicker(title: "Начало", picker: picker, accent: accentColor)
+                let vm = AnalysisDateItemViewModel(title: "Начало", date: viewModel?.startDate ?? Date()) { [weak self] newDate in
+                  self?.viewModel?.updateStartDate(newDate)
+                  self?.reloadData()
+                }
+                cell.configure(with: vm)
+                cell.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 0)
                 cell.selectionStyle = .none
                 return cell
             case 1:
                 let cell = tableView.dequeueReusableCell(withIdentifier: "DateCell", for: indexPath) as! AnalysisDateCell
-                let picker = UIDatePicker()
-                picker.datePickerMode = .date
-                picker.preferredDatePickerStyle = .compact
-                picker.locale = Locale(identifier: "ru_RU")
-                picker.date = viewModel?.endDate ?? Date()
-                picker.addTarget(self, action: #selector(endDateChanged(_:)), for: .valueChanged)
-                cell.configureWithPicker(title: "Конец", picker: picker, accent: accentColor)
+                let vm = AnalysisDateItemViewModel(title: "Конец", date: viewModel?.endDate ?? Date()) { [weak self] newDate in
+                  self?.viewModel?.updateEndDate(newDate)
+                  self?.reloadData()
+                }
+                cell.configure(with: vm)
+                cell.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 0)
                 cell.selectionStyle = .none
                 return cell
             case 2:
@@ -137,12 +134,14 @@ extension AnalysisViewController: UITableViewDataSource, UITableViewDelegate {
                 }
                 cell.configure(with: viewModel)
                 cell.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 0)
+                cell.selectionStyle = .none
                 return cell
             case 3:
                 let cell = tableView.dequeueReusableCell(withIdentifier: "SumCell", for: indexPath) as! AnalysisSumCell
                 let viewModel = AnalysisSumItemViewModel(amount: totalAmount, currency: currency)
                 cell.configure(with: viewModel)
                 cell.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 0)
+                cell.selectionStyle = .none
                 return cell
             default:
                 return UITableViewCell()
