@@ -12,6 +12,8 @@ struct TransactionsHistoryView: View {
   
   @State var viewModel: TransactionsListViewModel
   @State private var showAnalysis = false
+  @State private var showEditSheet = false
+  @State private var selectedTransaction: Transaction? = nil
   
   var body: some View {
     VStack {
@@ -28,18 +30,19 @@ struct TransactionsHistoryView: View {
             .padding(.leading, 0)
         ) {
           ForEach(viewModel.transactions) { transaction in
-            NavigationLink(destination: Text("Экран в разработке")) {
+            Button(action: {
+              selectedTransaction = transaction
+              showEditSheet = true
+            }) {
               HStack {
                 Text("\(transaction.category.emoji)")
                   .padding(6)
                   .background(
                     Circle().fill(Color.accent.opacity(0.2))
                   )
-                
                 VStack(alignment: .leading) {
                   Text(transaction.category.name)
                     .background()
-                  
                   if let comment = transaction.comment {
                     Text(comment)
                       .font(.callout)
@@ -47,16 +50,16 @@ struct TransactionsHistoryView: View {
                       .lineLimit(1)
                   }
                 }
-                
                 Spacer()
-                
                 AmountView(amount: transaction.amount, currency: viewModel.currency)
+                Image(systemName: "chevron.right")
+                  .foregroundColor(.gray)
+                  .font(.system(size: 16, weight: .semibold))
               }
               .frame(height: 44)
-              .alignmentGuide(.listRowSeparatorLeading) { _ in
-                42
-              }
+              .alignmentGuide(.listRowSeparatorLeading) { _ in 42 }
             }
+            .buttonStyle(.plain)
           }
         }
       }
@@ -76,6 +79,20 @@ struct TransactionsHistoryView: View {
           }
         }
       }
+      .sheet(isPresented: $showEditSheet) {
+        if let transaction = selectedTransaction {
+          TransactionEditView(
+            mode: .edit,
+            transaction: transaction,
+            direction: viewModel.direction,
+            currency: viewModel.currency,
+            service: viewModel.service,
+            onSave: { viewModel.loadTransactions() },
+            onDelete: { viewModel.loadTransactions() }
+          )
+        }
+      }
+      .id(selectedTransaction?.id)
     }
     .onAppear {
       viewModel.onViewAppear()

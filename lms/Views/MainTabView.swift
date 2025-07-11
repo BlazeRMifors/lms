@@ -10,7 +10,7 @@ import SwiftUI
 struct MainTabView: View {
   
   @State var viewModel: MainTabViewModel
-  
+
   var body: some View {
     TabView {
       TransactionsListView(viewModel: viewModel.outcomeModel)
