@@ -41,6 +41,7 @@ struct MainTabView: View {
           Label("Настройки", image: "settings-icon")
         }
     }
+    .tint(.accent)
     .onAppear {
       viewModel.onAppear()
     }

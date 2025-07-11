@@ -60,13 +60,12 @@ class AnalysisViewController: UIViewController {
     tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
     tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
     tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
-    tableView.separatorInset = UIEdgeInsets(top: 0, left: 42, bottom: 0, right: 0)
     tableView.backgroundColor = .clear
   }
   
   func configure(with viewModel: AnalysisViewModel) {
     self.viewModel = viewModel
-    setupBindings()
+    setupTableView()
   }
   
   override func viewWillAppear(_ animated: Bool) {
@@ -74,7 +73,7 @@ class AnalysisViewController: UIViewController {
     reloadData()
   }
   
-  private func setupBindings() {
+  private func setupTableView() {
     tableView.dataSource = self
     tableView.delegate = self
     tableView.register(AnalysisTransactionCell.self, forCellReuseIdentifier: "TransactionCell")
@@ -115,7 +114,6 @@ extension AnalysisViewController: UITableViewDataSource, UITableViewDelegate {
           self?.reloadData()
         }
         cell.configure(with: vm)
-        cell.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 0)
         cell.selectionStyle = .none
         return cell
       case 1:
@@ -125,7 +123,6 @@ extension AnalysisViewController: UITableViewDataSource, UITableViewDelegate {
           self?.reloadData()
         }
         cell.configure(with: vm)
-        cell.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 0)
         cell.selectionStyle = .none
         return cell
       case 2:
@@ -136,14 +133,12 @@ extension AnalysisViewController: UITableViewDataSource, UITableViewDelegate {
           self?.reloadData()
         }
         cell.configure(with: viewModel)
-        cell.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 0)
         cell.selectionStyle = .none
         return cell
       case 3:
         let cell = tableView.dequeueReusableCell(withIdentifier: "SumCell", for: indexPath) as! AnalysisSumCell
         let viewModel = AnalysisSumItemViewModel(amount: totalAmount, currency: currency)
         cell.configure(with: viewModel)
-        cell.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 0)
         cell.selectionStyle = .none
         return cell
       default:
@@ -155,10 +150,14 @@ extension AnalysisViewController: UITableViewDataSource, UITableViewDelegate {
       }
       let transaction = transactions[indexPath.row]
       let percent = viewModel.percent(for: transaction)
-      cell.configure(with: transaction, currency: currency, percent: percent)
-      cell.separatorInset = UIEdgeInsets(top: 0, left: 40, bottom: 0, right: 0)
-      cell.contentLeadingInset = 8
-      cell.contentTrailingInset = 8
+      let vm = AnalysisTransactionItemViewModel(
+        icon: "\(transaction.category.emoji)",
+        name: transaction.category.name,
+        amount: BaseConverter.toPrettySum(transaction.amount, currency: currency),
+        percent: String(format: "%.1f%%", percent),
+        comment: transaction.comment
+      )
+      cell.configure(with: vm)
       return cell
     }
   }
