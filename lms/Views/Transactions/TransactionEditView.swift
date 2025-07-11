@@ -134,13 +134,18 @@ struct TransactionEditView: View {
     HStack {
       Text("Сумма")
       Spacer()
-      TextField("0", text: $viewModel.amount)
-        .keyboardType(.decimalPad)
-        .multilineTextAlignment(.trailing)
-        .frame(width: 120)
-        .onChange(of: viewModel.amount) { newValue in
-          viewModel.validateAmountInput(newValue)
-        }
+      HStack(spacing: 4) {
+        TextField("0", text: $viewModel.amount)
+          .keyboardType(.decimalPad)
+          .multilineTextAlignment(.trailing)
+          .frame(width: 120)
+          .onChange(of: viewModel.amount) { newValue in
+            viewModel.validateAmountInput(newValue)
+          }
+        Text(viewModel.currencySymbol)
+          .foregroundColor(.gray)
+          .font(.system(size: 16))
+      }
     }
   }
   
@@ -287,6 +292,10 @@ final class TransactionEditViewModel: ObservableObject {
     selectedCategory != nil &&
     !amount.isEmpty &&
     Decimal(string: amount.replacingOccurrences(of: ",", with: ".")) != nil
+  }
+  
+  var currencySymbol: String {
+    currency.symbol
   }
   
   init(
