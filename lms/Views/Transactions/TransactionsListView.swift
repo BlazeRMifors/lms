@@ -194,7 +194,7 @@ final class TransactionsListViewModel {
     self.direction = direction
     self.currency = currency
     self.startDate = startDate
-    self.endDate = endDate.advanced(by: 1)
+    self.endDate = Calendar.current.startOfDay(for: endDate).addingTimeInterval(86399)
     self.sortType = sortType
     self.service = service
   }
