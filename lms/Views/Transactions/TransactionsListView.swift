@@ -11,76 +11,132 @@ import Combine
 struct TransactionsListView: View {
   
   @State var viewModel: TransactionsListViewModel
+  @State private var showEditSheet = false
+  @State private var showCreateSheet = false
+  @State private var selectedTransaction: Transaction? = nil
   
   var body: some View {
     NavigationStack {
-      VStack {
-        List {
-          HStack {
-            Text("Всего")
-            Spacer()
-            AmountView(amount: viewModel.totalAmount, currency: viewModel.currency)
-          }
-          
-          Section(
-            header: Text("Операции")
-              .font(.subheadline)
-              .padding(.leading, 0)
-          ) {
-            ForEach(viewModel.transactions) { transaction in
-              NavigationLink(
-                destination: Text("Экран в разработке")
-              ) {
-                HStack {
-                  Text("\(transaction.category.emoji)")
-                    .padding(6)
-                    .background(
-                      Circle().fill(Color.accent.opacity(0.12))
-                    )
-                  
-                  VStack(alignment: .leading) {
-                    Text(transaction.category.name)
-                      .background()
+      ZStack {
+        VStack {
+          List {
+            HStack {
+              Text("Всего")
+              Spacer()
+              AmountView(amount: viewModel.totalAmount, currency: viewModel.currency)
+            }
+            
+            Section(
+              header: Text("Операции")
+                .font(.subheadline)
+                .padding(.leading, 0)
+            ) {
+              ForEach(viewModel.transactions) { transaction in
+                Button(action: {
+                  selectedTransaction = transaction
+                  showEditSheet = true
+                }) {
+                  HStack {
+                    Text("\(transaction.category.emoji)")
+                      .padding(6)
+                      .background(
+                        Circle().fill(Color.accent.opacity(0.12))
+                      )
                     
-                    if let comment = transaction.comment {
-                      Text(comment)
-                        .font(.callout)
-                        .foregroundColor(Color.gray)
-                        .lineLimit(1)
+                    VStack(alignment: .leading) {
+                      Text(transaction.category.name)
+                        .background()
+                      
+                      if let comment = transaction.comment {
+                        Text(comment)
+                          .font(.callout)
+                          .foregroundColor(Color.gray)
+                          .lineLimit(1)
+                      }
                     }
+                    
+                    Spacer()
+                    
+                    AmountView(amount: transaction.amount, currency: viewModel.currency)
+                    Image(systemName: "chevron.right")
+                      .foregroundColor(.gray)
+                      .font(.system(size: 16, weight: .semibold))
                   }
-                  
-                  Spacer()
-                  
-                  AmountView(amount: transaction.amount, currency: viewModel.currency)
+                  .frame(height: 44)
+                  .alignmentGuide(.listRowSeparatorLeading) { _ in 42 }
                 }
-                .frame(height: 44)
-                .alignmentGuide(.listRowSeparatorLeading) { _ in
-                  42
-                }
+                .buttonStyle(.plain)
+              }
+            }
+          }
+          .navigationTitle(viewModel.direction == .income ? "Мои доходы" : "Мои расходы")
+          .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+              NavigationLink(
+                destination: TransactionsHistoryView(
+                  viewModel: viewModel.makeHistoryModel()
+                )
+              ) {
+                Image(systemName: "clock")
+                  .tint(.navigationBar)
               }
             }
           }
         }
-        .navigationTitle(viewModel.direction == .income ? "Доходы сегодня" : "Расходы сегодня")
-        .toolbar {
-          ToolbarItem(placement: .navigationBarTrailing) {
-            NavigationLink(
-              destination: TransactionsHistoryView(
-                viewModel: viewModel.makeHistoryModel()
-              )
-            ) {
-              Image(systemName: "clock")
-                .tint(.navigationBar)
-            }
-          }
-        }
+        fabButton
+      }
+      .safeAreaInset(edge: .bottom, spacing: 0) {
+        Color.clear.frame(height: 0)
       }
       .onAppear {
         viewModel.onViewAppear()
       }
+      .sheet(isPresented: $showEditSheet) {
+        if let transaction = selectedTransaction {
+          TransactionEditView(
+            mode: .edit,
+            transaction: transaction,
+            direction: viewModel.direction,
+            currency: viewModel.currency,
+            service: viewModel.service,
+            onSave: { viewModel.loadTransactions() },
+            onDelete: { viewModel.loadTransactions() }
+          )
+        }
+      }
+      .id(selectedTransaction?.id)
+      .sheet(isPresented: $showCreateSheet) {
+        TransactionEditView(
+          mode: .create,
+          direction: viewModel.direction,
+          currency: viewModel.currency,
+          service: viewModel.service,
+          onSave: { viewModel.loadTransactions() }
+        )
+      }
     }
     .tint(.navigationBar)
+  }
+  
+  private var fabButton: some View {
+    VStack {
+      Spacer()
+      HStack {
+        Spacer()
+        Button(action: {
+          showCreateSheet = true
+        }) {
+          Image(systemName: "plus")
+            .font(.title2)
+            .foregroundColor(.white)
+            .frame(width: 56, height: 56)
+            .background(Circle().fill(.accent))
+        }
+        .padding(.trailing, 24)
+        .padding(.bottom, 24)
+        .accessibilityLabel("Добавить операцию")
+      }
+    }
   }
 }
 
