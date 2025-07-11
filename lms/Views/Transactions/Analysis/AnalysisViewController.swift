@@ -1,31 +1,6 @@
 import UIKit
 
-class AnalysisViewModel {
-  private let baseViewModel: TransactionsListViewModel
-  
-  var transactions: [Transaction] { baseViewModel.transactions }
-  var startDate: Date { baseViewModel.startDate }
-  var endDate: Date { baseViewModel.endDate }
-  var sortType: TransactionSortType { baseViewModel.sortType }
-  var totalAmount: Decimal { baseViewModel.totalAmount }
-  var currency: Currency { baseViewModel.currency }
-  
-  init(baseViewModel: TransactionsListViewModel) {
-    self.baseViewModel = baseViewModel
-  }
-  
-  func updateStartDate(_ date: Date) { baseViewModel.updateStartDate(date) }
-  func updateEndDate(_ date: Date) { baseViewModel.updateEndDate(date) }
-  func toggleSortType(_ type: TransactionSortType) { baseViewModel.toggleSortType(type) }
-  func reload() { baseViewModel.loadTransactions() }
-  
-  func percent(for transaction: Transaction) -> Double {
-    guard totalAmount != 0 else { return 0 }
-    return (transaction.amount as NSDecimalNumber).doubleValue / (totalAmount as NSDecimalNumber).doubleValue * 100
-  }
-}
-
-class AnalysisViewController: UIViewController {
+final class AnalysisViewController: UIViewController {
   
   private enum Section: Int, CaseIterable {
     case setting = 0
@@ -41,16 +16,25 @@ class AnalysisViewController: UIViewController {
   
   // MARK: - UI
   private let tableView = UITableView(frame: .zero, style: .insetGrouped)
-  private var viewModel: AnalysisViewModel?
+  private var viewModel: AnalysisViewModel
   
-  private var transactions: [Transaction] { viewModel?.transactions ?? [] }
-  private var totalAmount: Decimal { viewModel?.totalAmount ?? 0 }
-  private var currency: Currency { viewModel?.currency ?? .rub }
+  init(viewModel: AnalysisViewModel) {
+    self.viewModel = viewModel
+    super.init(nibName: nil, bundle: nil)
+    self.viewModel.onUpdate = { [weak self] in
+      self?.reloadData()
+    }
+  }
+  
+  required init?(coder: NSCoder) {
+    fatalError("init(coder:) has not been implemented")
+  }
   
   // MARK: - Lifecycle
   override func viewDidLoad() {
     super.viewDidLoad()
     setupUI()
+    setupTableView()
   }
   
   private func setupUI() {
@@ -63,13 +47,9 @@ class AnalysisViewController: UIViewController {
     tableView.backgroundColor = .clear
   }
   
-  func configure(with viewModel: AnalysisViewModel) {
-    self.viewModel = viewModel
-    setupTableView()
-  }
-  
   override func viewWillAppear(_ animated: Bool) {
     super.viewWillAppear(animated)
+    viewModel.loadTransactions()
     reloadData()
   }
   
@@ -93,7 +73,7 @@ extension AnalysisViewController: UITableViewDataSource, UITableViewDelegate {
   }
   
   func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-    section == Section.setting.rawValue ? SettingRow.allCases.count : transactions.count
+    section == Section.setting.rawValue ? SettingRow.allCases.count : viewModel.transactions.count
   }
   
   func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
@@ -109,8 +89,8 @@ extension AnalysisViewController: UITableViewDataSource, UITableViewDelegate {
       switch indexPath.row {
       case 0:
         let cell = tableView.dequeueReusableCell(withIdentifier: "DateCell", for: indexPath) as! AnalysisDateCell
-        let vm = AnalysisDateItemViewModel(title: "Начало", date: viewModel?.startDate ?? Date()) { [weak self] newDate in
-          self?.viewModel?.updateStartDate(newDate)
+        let vm = AnalysisDateItemViewModel(title: "Начало", date: viewModel.startDate) { [weak self] newDate in
+          self?.viewModel.updateStartDate(newDate)
           self?.reloadData()
         }
         cell.configure(with: vm)
@@ -118,8 +98,8 @@ extension AnalysisViewController: UITableViewDataSource, UITableViewDelegate {
         return cell
       case 1:
         let cell = tableView.dequeueReusableCell(withIdentifier: "DateCell", for: indexPath) as! AnalysisDateCell
-        let vm = AnalysisDateItemViewModel(title: "Конец", date: viewModel?.endDate ?? Date()) { [weak self] newDate in
-          self?.viewModel?.updateEndDate(newDate)
+        let vm = AnalysisDateItemViewModel(title: "Конец", date: viewModel.endDate) { [weak self] newDate in
+          self?.viewModel.updateEndDate(newDate)
           self?.reloadData()
         }
         cell.configure(with: vm)
@@ -127,9 +107,9 @@ extension AnalysisViewController: UITableViewDataSource, UITableViewDelegate {
         return cell
       case 2:
         let cell = tableView.dequeueReusableCell(withIdentifier: "SortCell", for: indexPath) as! AnalysisSortCell
-        let sortType = viewModel?.sortType ?? .date
+        let sortType = viewModel.sortType
         let viewModel = AnalysisSortItemViewModel(sortType: sortType) { [weak self] newType in
-          self?.viewModel?.toggleSortType(newType)
+          self?.viewModel.toggleSortType(newType)
           self?.reloadData()
         }
         cell.configure(with: viewModel)
@@ -137,7 +117,7 @@ extension AnalysisViewController: UITableViewDataSource, UITableViewDelegate {
         return cell
       case 3:
         let cell = tableView.dequeueReusableCell(withIdentifier: "SumCell", for: indexPath) as! AnalysisSumCell
-        let viewModel = AnalysisSumItemViewModel(amount: totalAmount, currency: currency)
+        let viewModel = AnalysisSumItemViewModel(amount: viewModel.totalAmount, currency: viewModel.currency)
         cell.configure(with: viewModel)
         cell.selectionStyle = .none
         return cell
@@ -145,15 +125,15 @@ extension AnalysisViewController: UITableViewDataSource, UITableViewDelegate {
         return UITableViewCell()
       }
     } else {
-      guard let cell = tableView.dequeueReusableCell(withIdentifier: "TransactionCell", for: indexPath) as? AnalysisTransactionCell, let viewModel else {
+      guard let cell = tableView.dequeueReusableCell(withIdentifier: "TransactionCell", for: indexPath) as? AnalysisTransactionCell else {
         return UITableViewCell()
       }
-      let transaction = transactions[indexPath.row]
+      let transaction = viewModel.transactions[indexPath.row]
       let percent = viewModel.percent(for: transaction)
       let vm = AnalysisTransactionItemViewModel(
         icon: "\(transaction.category.emoji)",
         name: transaction.category.name,
-        amount: BaseConverter.toPrettySum(transaction.amount, currency: currency),
+        amount: BaseConverter.toPrettySum(transaction.amount, currency: viewModel.currency),
         percent: String(format: "%.1f%%", percent),
         comment: transaction.comment
       )
