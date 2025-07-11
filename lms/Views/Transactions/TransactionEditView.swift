@@ -363,7 +363,7 @@ final class TransactionEditViewModel: ObservableObject {
     )
     switch mode {
     case .create:
-      _ = try? await bankAccountsService.getUserAccount() // just to simulate account fetch
+    //   _ = try? await bankAccountsService.getUserAccount()
       await service.create(transaction: newTransaction)
     case .edit:
       await service.update(transaction: newTransaction)
