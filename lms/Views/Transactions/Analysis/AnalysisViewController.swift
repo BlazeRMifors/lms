@@ -131,10 +131,11 @@ extension AnalysisViewController: UITableViewDataSource, UITableViewDelegate {
             case 2:
                 let cell = tableView.dequeueReusableCell(withIdentifier: "SortCell", for: indexPath) as! AnalysisSortCell
                 let sortType = viewModel?.sortType ?? .date
-                cell.configure(selected: sortType, menuStyle: true) { [weak self] newType in
-                    self?.viewModel?.toggleSortType(newType)
-                    self?.reloadData()
+                let viewModel = AnalysisSortItemViewModel(sortType: sortType) { [weak self] newType in
+                  self?.viewModel?.toggleSortType(newType)
+                  self?.reloadData()
                 }
+                cell.configure(with: viewModel)
                 cell.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 0)
                 return cell
             case 3:
