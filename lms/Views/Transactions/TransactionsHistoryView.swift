@@ -69,7 +69,13 @@ struct TransactionsHistoryView: View {
           HStack {
             NavigationLink(
               destination:
-                AnalysisViewControllerRepresentable(viewModel: viewModel)
+                AnalysisViewControllerRepresentable(
+                  viewModel: viewModel,
+                  onTransactionSelected: { transaction in
+                    selectedTransaction = transaction
+                    showEditSheet = true
+                  }
+                )
                 .navigationTitle("Анализ")
                 .background(.bg)
             ) {
