@@ -69,6 +69,7 @@ struct TransactionEditView: View {
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           Button("Отмена") { dismiss() }
+            .foregroundColor(.action)
         }
         ToolbarItem(placement: .navigationBarTrailing) {
           Button(action: {
@@ -83,6 +84,7 @@ struct TransactionEditView: View {
             }
           }) {
             Text(mode == .edit ? "Сохранить" : "Создать")
+              .foregroundColor(.action)
           }
         }
       }
