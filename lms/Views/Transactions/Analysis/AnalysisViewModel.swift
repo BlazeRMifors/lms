@@ -22,7 +22,7 @@ final class AnalysisViewModel {
   var endDate: Date = Date()
   var sortType: TransactionSortType = .date
   
-  private let service: TransactionsService
+  let service: TransactionsService
   private(set) var transactions: [Transaction] = []
   
   convenience init(viewModel: TransactionsListViewModel) {

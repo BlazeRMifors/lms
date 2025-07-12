@@ -1,4 +1,5 @@
 import UIKit
+import SwiftUI
 
 final class AnalysisViewController: UIViewController {
   
@@ -17,7 +18,6 @@ final class AnalysisViewController: UIViewController {
   // MARK: - UI
   private let tableView = UITableView(frame: .zero, style: .insetGrouped)
   private var viewModel: AnalysisViewModel
-  var onTransactionSelected: ((Transaction) -> Void)?
   
   init(viewModel: AnalysisViewModel) {
     self.viewModel = viewModel
@@ -65,6 +65,26 @@ final class AnalysisViewController: UIViewController {
   
   private func reloadData() {
     tableView.reloadData()
+  }
+  
+  private func presentTransactionEditView(for transaction: Transaction) {
+    let transactionEditView = TransactionEditView(
+      mode: .edit,
+      transaction: transaction,
+      direction: viewModel.direction,
+      currency: viewModel.currency,
+      service: viewModel.service,
+      onSave: { [weak self] in
+        self?.viewModel.loadTransactions()
+      },
+      onDelete: { [weak self] in
+        self?.viewModel.loadTransactions()
+      }
+    )
+    
+    let hostingController = UIHostingController(rootView: transactionEditView)
+    hostingController.modalPresentationStyle = .formSheet
+    present(hostingController, animated: true)
   }
 }
 
@@ -150,6 +170,6 @@ extension AnalysisViewController: UITableViewDataSource, UITableViewDelegate {
     guard indexPath.section == Section.operations.rawValue else { return }
     
     let transaction = viewModel.transactions[indexPath.row]
-    onTransactionSelected?(transaction)
+    presentTransactionEditView(for: transaction)
   }
 }

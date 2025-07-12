@@ -40,6 +40,7 @@ final class TransactionsService {
   func update(transaction: Transaction) async {
     cache.insert(transaction)
     cache.save(to: cacheName)
+    print("🆑 update and save transaction")
   }
   
   func delete(withId id: Int) async {
