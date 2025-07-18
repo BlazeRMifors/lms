@@ -25,10 +25,3 @@ final class CategoriesAPI: CategoriesAPIProtocol {
         return categories
     }
 }
-
-// Пример мок-реализации для отладки:
-// final class MockCategoriesAPI: CategoriesAPIProtocol {
-//     func fetchAllCategories() async throws -> [Category] {
-//         return [Category(...), ...]
-//     }
-// } 
