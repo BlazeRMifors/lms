@@ -7,26 +7,6 @@
 
 import Foundation
 
-enum NetworkError: Error, LocalizedError {
-    case httpError(code: Int, data: Data?)
-    case encodingError(Error)
-    case decodingError(Error)
-    case unknown(Error)
-    
-    var errorDescription: String? {
-        switch self {
-        case .httpError:
-            return "Не удалось загрузить данные. Проверьте подключение к интернету или попробуйте позже."
-        case .encodingError:
-            return "Ошибка подготовки данных для отправки. Попробуйте позже."
-        case .decodingError:
-            return "Ошибка обработки ответа от сервера. Попробуйте позже."
-        case .unknown:
-            return "Произошла неизвестная ошибка. Попробуйте позже."
-        }
-    }
-}
-
 protocol NetworkClient {
     func send<Response: Decodable>(_ request: NetworkRequest) async throws -> Response
 }
@@ -82,3 +62,26 @@ final class Client: NetworkClient {
         }
     }
 } 
+
+enum NetworkError: Error, LocalizedError {
+    case httpError(code: Int, data: Data?)
+    case encodingError(Error)
+    case decodingError(Error)
+    case unknown(Error)
+    
+    var errorDescription: String? {
+        switch self {
+        case .httpError:
+            return "Не удалось загрузить данные. Проверьте подключение к интернету или попробуйте позже."
+        case .encodingError:
+            return "Ошибка подготовки данных для отправки. Попробуйте позже."
+        case .decodingError:
+            return "Ошибка обработки ответа от сервера. Попробуйте позже."
+        case .unknown:
+            return "Произошла неизвестная ошибка. Попробуйте позже."
+        }
+    }
+}
+
+// Заглушка для пустого ответа
+struct EmptyResponse: Decodable {} 
