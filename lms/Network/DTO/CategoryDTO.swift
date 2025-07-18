@@ -14,6 +14,11 @@ struct CategoryDTO: Codable, Identifiable {
     let isIncome: Bool
     
     func toDomain() -> Category {
-        Category(id: id, name: name, emoji: emoji.first ?? " ", isIncome: isIncome)
+        Category(
+            id: id,
+            name: name,
+            emoji: emoji.first ?? " ",
+            direction: isIncome ? .income : .outcome
+        )
     }
 } 

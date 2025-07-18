@@ -12,21 +12,16 @@ protocol CategoriesAPIProtocol {
 }
 
 final class CategoriesAPI: CategoriesAPIProtocol {
-    private let client: NetworkClient
-    private var cachedCategories: [Category]? = nil
+    private let networkClient: NetworkClient
     
     init(client: NetworkClient) {
-        self.client = client
+        self.networkClient = client
     }
     
     func fetchAllCategories() async throws -> [Category] {
-        if let cached = cachedCategories {
-            return cached
-        }
-        let request = Request.get(url: ApiEndpoints.categoriesURL)
-        let dtos: [CategoryDTO] = try await client.send(request)
+        let request = Request.get(url: ApiEndpoints.categories)
+        let dtos: [CategoryDTO] = try await networkClient.send(request)
         let categories = dtos.map { $0.toDomain() }
-        self.cachedCategories = categories
         return categories
     }
 }

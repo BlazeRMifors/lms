@@ -33,7 +33,7 @@ extension Category {
       id: categoryId,
       name: categoryName,
       emoji: categoryIcon,
-      isIncome: categoryIsIncome
+      direction: categoryIsIncome ? .income : .outcome
     )
   }
   
@@ -44,7 +44,7 @@ extension Category {
       "id": id as NSNumber,
       "name": name,
       "emoji": String(emoji),
-      "isIncome": isIncome
+      "isIncome": direction == .income
     ] as [String: Any]
   }
 }

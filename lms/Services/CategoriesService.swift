@@ -14,14 +14,21 @@ protocol CategoriesServiceProtocol {
 
 final class CategoriesService: CategoriesServiceProtocol {
     private let api: CategoriesAPIProtocol
+    private var cachedCategories: [Category]? = nil
 
     init(api: CategoriesAPIProtocol = CategoriesAPI(client: Client())) {
         self.api = api
     }
     
     func getAllCategories() async -> [Category] {
+        if let cached = cachedCategories {
+            return cached
+        }
+        
         do {
-            return try await api.fetchAllCategories()
+            let categories = try await api.fetchAllCategories()
+            self.cachedCategories = categories
+            return categories
         } catch {
             return []
         }
