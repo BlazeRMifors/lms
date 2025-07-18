@@ -20,7 +20,7 @@ final class CategoriesAPI: CategoriesAPIProtocol {
     
     func fetchAllCategories() async throws -> [Category] {
         let request = Request.get(url: ApiEndpoints.categories)
-        let dtos: [CategoryDTO] = try await networkClient.send(request)
+        let dtos: [CategoryResponseDTO] = try await networkClient.send(request)
         let categories = dtos.map { $0.toDomain() }
         return categories
     }

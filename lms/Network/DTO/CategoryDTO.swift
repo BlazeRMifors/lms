@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct CategoryDTO: Codable, Identifiable {
+struct CategoryResponseDTO: Codable, Identifiable {
     let id: Int
     let name: String
     let emoji: String

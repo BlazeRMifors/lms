@@ -33,7 +33,7 @@ struct Transaction: Identifiable, Hashable {
 
 struct TransactionDTO: Codable, Identifiable {
     let id: Int
-    let category: CategoryDTO
+    let category: CategoryResponseDTO
     let amount: Decimal
     let transactionDate: Date
     let comment: String?
