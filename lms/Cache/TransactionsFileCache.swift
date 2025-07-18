@@ -39,6 +39,11 @@ final class TransactionsFileCache {
   func remove(withId id: Int) {
     transactions.removeAll { $0.id == id }
   }
+
+  /// Массовое присваивание массива транзакций
+  func set(transactions: [Transaction]) {
+    self.transactions = transactions
+  }
   
   // MARK: - Работа с файлами
   

@@ -30,3 +30,11 @@ struct Transaction: Identifiable, Hashable {
   let transactionDate: Date
   let comment: String?
 }
+
+struct TransactionDTO: Codable, Identifiable {
+    let id: Int
+    let category: CategoryDTO
+    let amount: Decimal
+    let transactionDate: Date
+    let comment: String?
+}
