@@ -68,7 +68,7 @@ extension Transaction {
         "id": category.id as NSNumber,
         "name": category.name,
         "emoji": String(category.emoji),
-        "isIncome": category.isIncome
+        "isIncome": category.direction == .income
       ]
     ] as [String: Any]
   }
