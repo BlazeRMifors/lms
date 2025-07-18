@@ -2,7 +2,7 @@
 //  BankAccountsAPI.swift
 //  lms
 //
-//  Created by Ivan Isaev on 20.07.2025.
+//  Created by Ivan Isaev on 17.07.2025.
 //
 
 import Foundation

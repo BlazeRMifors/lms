@@ -1,3 +1,10 @@
+//
+//  CategoriesFileCache.swift
+//  lms
+//
+//  Created by Ivan Isaev on 18.07.2025.
+//
+
 import Foundation
 
 protocol CategoriesCacheProtocol {
