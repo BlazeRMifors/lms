@@ -8,37 +8,31 @@
 import Foundation
 
 protocol BankAccountsServiceProtocol {
-  var myAccount: BankAccount? { get }
-  func getUserAccount() async throws -> BankAccount
-  func updateAccount(balance: Decimal, currency: Currency) async throws
+    func getUserAccount() async throws -> BankAccount
+    func updateAccount(balance: Decimal, currency: Currency) async throws -> BankAccount
 }
 
 final class BankAccountsService: BankAccountsServiceProtocol {
-  
-  private(set) var myAccount: BankAccount?
-  
-  func getUserAccount() async throws -> BankAccount {
-    try await randomDelay()
+    private let api: BankAccountsAPIProtocol
+    private var myAccount: BankAccount? = nil
     
-    return BankAccount(
-      id: 1,
-      balance: Decimal(Int.random(in: 10_000...100_000)),
-      currency: .rub
-    )
-  }
-  
-  func updateAccount(balance: Decimal, currency: Currency) async throws {
-    try await randomDelay()
+    init(api: BankAccountsAPIProtocol = BankAccountsAPI(client: Client())) {
+        self.api = api
+    }
     
-    myAccount = BankAccount(
-      id: 1,
-      balance: balance,
-      currency: currency
-    )
-  }
-  
-  private func randomDelay(min: UInt64 = 1_000_000_000, max: UInt64 = 3_000_000_000) async throws {
-    let delay = UInt64.random(in: min...max)
-    try await Task.sleep(nanoseconds: delay)
-  }
+    func getUserAccount() async throws -> BankAccount {
+        let account = try await api.fetchAccount()
+        self.myAccount = account
+        return account
+    }
+    
+    @discardableResult
+    func updateAccount(balance: Decimal, currency: Currency) async throws -> BankAccount {
+        guard let account = myAccount else {
+            throw NetworkError.unknown(NSError(domain: "BankAccountsService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Не удалось получить текущий счет для обновления. Попробуйте позже."]))
+        }
+        let updated = try await api.updateAccount(account, balance: balance, currency: currency)
+        self.myAccount = updated
+        return updated
+    }
 }

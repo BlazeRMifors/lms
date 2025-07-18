@@ -14,5 +14,11 @@ struct ApiEndpoints {
         baseURL.appendingPathComponent("categories")
     }
     
+    static var accounts: URL {
+        baseURL.appendingPathComponent("accounts")
+    }
     
+    static func account(id: Int) -> URL {
+        baseURL.appendingPathComponent("accounts/\(id)")
+    }
 }
