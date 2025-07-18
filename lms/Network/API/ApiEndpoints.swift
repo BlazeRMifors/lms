@@ -21,4 +21,21 @@ struct ApiEndpoints {
     static func account(id: Int) -> URL {
         baseURL.appendingPathComponent("accounts/\(id)")
     }
+    
+    static var transactions: URL {
+        baseURL.appendingPathComponent("transactions")
+    }
+    
+    static func transaction(id: Int) -> URL {
+        baseURL.appendingPathComponent("transactions/\(id)")
+    }
+    
+    static func transactionsForAccount(accountId: Int, startDate: String, endDate: String) -> URL {
+        var components = URLComponents(url: baseURL.appendingPathComponent("transactions/account/\(accountId)/period"), resolvingAgainstBaseURL: false)!
+        components.queryItems = [
+            URLQueryItem(name: "startDate", value: startDate),
+            URLQueryItem(name: "endDate", value: endDate)
+        ]
+        return components.url!
+    }
 }
