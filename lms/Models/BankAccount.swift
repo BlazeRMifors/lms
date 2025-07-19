@@ -7,14 +7,14 @@
 
 import Foundation
 
-struct BankAccount: Identifiable {
+struct BankAccount: Identifiable, Codable {
     let id: Int
     let name: String
     let balance: Decimal
     let currency: Currency
 }
 
-enum Currency: String, CaseIterable, Identifiable, CustomStringConvertible {
+enum Currency: String, CaseIterable, Identifiable, CustomStringConvertible, Codable {
     case rub = "RUB"
     case usd = "USD"
     case eur = "EUR"
