@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		8E3E933D2E2B5CAC00B2F1DD /* Settings.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 8E3E933C2E2B5CAC00B2F1DD /* Settings.bundle */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		8EFF28AF2E017B2C008062F8 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -24,6 +28,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		8E3E933C2E2B5CAC00B2F1DD /* Settings.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = Settings.bundle; sourceTree = "<group>"; };
 		8EFF289E2E017B29008062F8 /* lms.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = lms.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8EFF28AE2E017B2C008062F8 /* lmsTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = lmsTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8EFF28B82E017B2C008062F8 /* lmsUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = lmsUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -79,6 +84,7 @@
 				8EFF28B12E017B2C008062F8 /* lmsTests */,
 				8EFF28BB2E017B2C008062F8 /* lmsUITests */,
 				8EFF289F2E017B29008062F8 /* Products */,
+				8E3E933C2E2B5CAC00B2F1DD /* Settings.bundle */,
 			);
 			sourceTree = "<group>";
 		};
@@ -212,6 +218,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8E3E933D2E2B5CAC00B2F1DD /* Settings.bundle in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
