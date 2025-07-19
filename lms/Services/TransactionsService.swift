@@ -65,10 +65,7 @@ final class TransactionsService: TransactionsServiceProtocol {
         
         // 2. Пробуем получить с сервера
         do {
-            let dateFormatter = ISO8601DateFormatter()
-            let startDate = dateFormatter.string(from: period.start)
-            let endDate = dateFormatter.string(from: period.end)
-            let transactions = try await api.getTransactions(accountId: accountId, startDate: startDate, endDate: endDate)
+            let transactions = try await api.getTransactions(accountId: accountId, startDate: period.start, endDate: period.end)
             for tx in transactions {
                 await storage.insert(tx)
             }
