@@ -217,7 +217,7 @@ final class TransactionsListViewModel {
   func loadTransactions() {
     Task {
       do {
-        guard let accountId = try? await bankAccountsService.getUserAccount().id else { return }
+        guard let accountId = try? await bankAccountsService.getAccountId() else { return }
         
         let result = try await service.getTransactions(
           for: accountId,

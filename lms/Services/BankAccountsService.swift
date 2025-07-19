@@ -8,6 +8,7 @@
 import Foundation
 
 protocol BankAccountsServiceProtocol {
+    func getAccountId() async throws -> Int
     func getUserAccount() async throws -> BankAccount
     func updateAccount(balance: Decimal, currency: Currency) async throws -> BankAccount
 }
@@ -20,10 +21,14 @@ final class BankAccountsService: BankAccountsServiceProtocol {
         self.api = api
     }
     
-    func getUserAccount() async throws -> BankAccount {
+    func getAccountId() async throws -> Int {
         if let cached = myAccount {
-            return cached
+            return cached.id
         }
+        return try await getUserAccount().id
+    }
+    
+    func getUserAccount() async throws -> BankAccount {
         let account = try await api.fetchAccount()
         self.myAccount = account
         return account

@@ -357,7 +357,7 @@ final class TransactionEditViewModel: ObservableObject {
           let amountDecimal = Decimal(string: amount.replacingOccurrences(of: ",", with: "."))
     else { return }
     
-    guard let accountId = try? await bankAccountsService.getUserAccount().id else { return }
+    guard let accountId = try? await bankAccountsService.getAccountId() else { return }
     
     switch mode {
     case .create:
