@@ -10,40 +10,54 @@ import SwiftUI
 struct MainTabView: View {
   
   @State var viewModel: MainTabViewModel
+  @State private var isOffline: Bool = false
 
   var body: some View {
-    TabView {
-      TransactionsListView(viewModel: viewModel.outcomeModel)
-        .tabItem {
-          Label("Расходы", image: "downtrend-icon")
-        }
-      
-      TransactionsListView(viewModel: viewModel.incomeModel)
-        .tabItem {
-          Label("Доходы", image: "uptrend-icon")
-        }
-      
-      BankAccountCoordinatorView(service: viewModel.bankAccountService)
-        .tabItem {
-          Label("Счет", image: "account-icon")
-        }
-      
-      CategoriesView(viewModel: CategoriesViewModel(categoriesService: viewModel.categoriesService))
-        .tabItem {
-          Label("Статьи", image: "categories-icon")
-        }
-      
-      NavigationStack {
-        Text("Экран в разработке")
-          .navigationTitle("Настройки")
+    VStack(spacing: 0) {
+      if isOffline {
+        Text("Offline mode")
+          .frame(maxWidth: .infinity)
+          .padding(8)
+          .background(Color.red)
+          .foregroundColor(.white)
+          .font(.headline)
+          .transition(.move(edge: .top))
       }
-        .tabItem {
-          Label("Настройки", image: "settings-icon")
+      TabView {
+        TransactionsListView(viewModel: viewModel.outcomeModel)
+          .tabItem {
+            Label("Расходы", image: "downtrend-icon")
+          }
+        
+        TransactionsListView(viewModel: viewModel.incomeModel)
+          .tabItem {
+            Label("Доходы", image: "uptrend-icon")
+          }
+        
+        BankAccountCoordinatorView(service: viewModel.bankAccountService)
+          .tabItem {
+            Label("Счет", image: "account-icon")
+          }
+        
+        CategoriesView(viewModel: CategoriesViewModel(categoriesService: viewModel.categoriesService))
+          .tabItem {
+            Label("Статьи", image: "categories-icon")
+          }
+        
+        NavigationStack {
+          Text("Экран в разработке")
+            .navigationTitle("Настройки")
         }
-    }
-    .tint(.accent)
-    .onAppear {
-      viewModel.onAppear()
+          .tabItem {
+            Label("Настройки", image: "settings-icon")
+          }
+      }
+      .tint(.accent)
+      .onAppear {
+        viewModel.onAppear()
+        isOffline = viewModel.isOffline
+      }
+      .onChange(of: viewModel.isOffline) { isOffline = $0 }
     }
   }
 }
@@ -59,6 +73,7 @@ final class MainTabViewModel {
   private(set) var transactionService: TransactionsService
   private(set) var bankAccountService: BankAccountsService
   private(set) var categoriesService: CategoriesService
+  var isOffline: Bool = false
   
   let incomeModel: TransactionsListViewModel
   let outcomeModel: TransactionsListViewModel
