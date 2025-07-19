@@ -11,10 +11,9 @@ struct AnalysisViewControllerRepresentable: UIViewControllerRepresentable {
   }
   
   func makeUIViewController(context: Context) -> AnalysisViewController {
-    let vc = AnalysisViewController(viewModel: analysisVM)
-    return vc
+    AnalysisViewController(viewModel: analysisVM)
   }
-  
+
   func updateUIViewController(_ uiViewController: AnalysisViewController, context: Context) {
     // TODO: Обновить данные при необходимости
   }
