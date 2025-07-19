@@ -22,12 +22,12 @@ struct TransactionUpdateDTO: Encodable {
     let transactionDate: String
     let comment: String?
     
-    static func from(_ transaction: Transaction, dateFormatter: DateFormatter) -> TransactionUpdateDTO {
+    static func from(_ transaction: Transaction) -> TransactionUpdateDTO {
         TransactionUpdateDTO(
             accountId: transaction.accountId,
             categoryId: transaction.category.id,
             amount: NSDecimalNumber(decimal: transaction.amount).stringValue,
-            transactionDate: dateFormatter.string(from: transaction.transactionDate),
+            transactionDate: ISO8601DateFormatter().string(from: transaction.transactionDate),
             comment: transaction.comment
         )
     }
