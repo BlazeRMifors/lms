@@ -146,12 +146,20 @@ struct TransactionsListView: View {
 
 let previewIncomeViewModel = TransactionsListViewModel(
   direction: .income,
-  currency: .rub
+  currency: .rub,
+  startDate: Calendar.current.startOfDay(for: Date()),
+  endDate: Calendar.current.startOfDay(for: Date()).addingTimeInterval(86399),
+  service: TransactionsService(),
+  bankAccountsService: BankAccountsService()
 )
 
 let previewOutcomeViewModel = TransactionsListViewModel(
   direction: .income,
-  currency: .rub
+  currency: .rub,
+  startDate: Calendar.current.startOfDay(for: Date()),
+  endDate: Calendar.current.startOfDay(for: Date()).addingTimeInterval(86399),
+  service: TransactionsService(),
+  bankAccountsService: BankAccountsService()
 )
 
 // MARK: - ViewModel
@@ -174,6 +182,7 @@ final class TransactionsListViewModel {
   var sortType: TransactionSortType = .date
   
   let service: TransactionsService
+  let bankAccountsService: BankAccountsService
   
   private(set) var transactions: [Transaction] = []
   
@@ -189,7 +198,8 @@ final class TransactionsListViewModel {
     startDate: Date = Calendar.current.startOfDay(for: Date()),
     endDate: Date = Date(),
     sortType: TransactionSortType = .date,
-    service: TransactionsService = TransactionsService()
+    service: TransactionsService = TransactionsService(),
+    bankAccountsService: BankAccountsService = BankAccountsService()
   ) {
     self.direction = direction
     self.currency = currency
@@ -197,6 +207,7 @@ final class TransactionsListViewModel {
     self.endDate = Calendar.current.startOfDay(for: endDate).addingTimeInterval(86399)
     self.sortType = sortType
     self.service = service
+    self.bankAccountsService = bankAccountsService
   }
   
   func onViewAppear() {
@@ -205,12 +216,21 @@ final class TransactionsListViewModel {
   
   func loadTransactions() {
     Task {
-      let result = await service.getTransactions(
-        for: direction,
-        in: DateInterval(start: startDate, end: endDate)
-      )
-      await MainActor.run {
-        self.transactions = sortedTransactions(result)
+      do {
+        guard let accountId = try? await bankAccountsService.getUserAccount().id else { return }
+        
+        let result = try await service.getTransactions(
+          for: accountId,
+          with: direction,
+          in: DateInterval(start: startDate, end: endDate)
+        )
+        await MainActor.run {
+          self.transactions = sortedTransactions(result)
+        }
+      } catch {
+        await MainActor.run {
+          self.transactions = []
+        }
       }
     }
   }
@@ -220,7 +240,8 @@ final class TransactionsListViewModel {
       direction: direction,
       currency: currency,
       startDate: Calendar.current.startOfDay(for: Date()).advanced(by: -30 * 86400),
-      service: service
+      service: service,
+      bankAccountsService: bankAccountsService
     )
   }
   

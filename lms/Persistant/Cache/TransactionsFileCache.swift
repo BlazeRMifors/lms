@@ -134,6 +134,7 @@ extension TransactionsFileCache {
         
         return Transaction(
             id: id,
+            accountId: 1,
             category: category,
             amount: amount,
             transactionDate: date,

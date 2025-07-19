@@ -1,5 +1,5 @@
 //
-//  BankAccountResponseDTO.swift
+//  BankAccountDTO.swift
 //  lms
 //
 //  Created by Ivan Isaev on 18.07.2025.
