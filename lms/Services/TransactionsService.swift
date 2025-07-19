@@ -71,13 +71,18 @@ final class TransactionsService: TransactionsServiceProtocol {
             }
             await storage.save()
             return transactions
+                .filter { tx in
+                    tx.accountId == accountId &&
+                    tx.category.direction == direction &&
+                    tx.transactionDate >= period.start &&
+                    tx.transactionDate <= period.end
+                }
         } catch {
             // 4. При ошибке — мержим storage и backup
             let local = await storage.all()
             let backupTx = backup.all().map { $0.transaction }
             let merged = (local + backupTx)
                 .filter { tx in
-                    // фильтруем по accountId, направлению и периоду
                     tx.accountId == accountId &&
                     tx.category.direction == direction &&
                     tx.transactionDate >= period.start &&
