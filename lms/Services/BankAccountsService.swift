@@ -21,6 +21,9 @@ final class BankAccountsService: BankAccountsServiceProtocol {
     }
     
     func getUserAccount() async throws -> BankAccount {
+        if let cached = myAccount {
+            return cached
+        }
         let account = try await api.fetchAccount()
         self.myAccount = account
         return account
