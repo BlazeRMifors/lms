@@ -35,7 +35,7 @@ struct TransactionUpdateDTO: Encodable {
             categoryId: transaction.category.id,
             amount: NSDecimalNumber(decimal: transaction.amount).stringValue,
             transactionDate: iso8601Formatter.string(from: transaction.transactionDate),
-            comment: transaction.comment
+            comment: transaction.comment ?? ""
         )
     }
 }
