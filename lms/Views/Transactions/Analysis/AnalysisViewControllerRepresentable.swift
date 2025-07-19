@@ -3,8 +3,14 @@ import SwiftUI
 struct AnalysisViewControllerRepresentable: UIViewControllerRepresentable {
   var viewModel: TransactionsListViewModel
   
+  @Bindable var analysisVM: AnalysisViewModel
+  
+  init(viewModel: TransactionsListViewModel) {
+    self.viewModel = viewModel
+    self.analysisVM = AnalysisViewModel(viewModel: viewModel)
+  }
+  
   func makeUIViewController(context: Context) -> AnalysisViewController {
-    let analysisVM = AnalysisViewModel(viewModel: viewModel)
     let vc = AnalysisViewController(viewModel: analysisVM)
     return vc
   }

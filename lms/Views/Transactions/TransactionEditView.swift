@@ -141,7 +141,7 @@ struct TransactionEditView: View {
           .keyboardType(.decimalPad)
           .multilineTextAlignment(.trailing)
           .frame(width: 120)
-          .onChange(of: viewModel.amount) { newValue in
+          .onChange(of: viewModel.amount) { _, newValue in
             viewModel.validateAmountInput(newValue)
           }
         Text(viewModel.currencySymbol)
@@ -356,25 +356,35 @@ final class TransactionEditViewModel: ObservableObject {
     guard let category = selectedCategory,
           let amountDecimal = Decimal(string: amount.replacingOccurrences(of: ",", with: "."))
     else { return }
-    let newTransaction = Transaction(
-      id: transaction?.id ?? Int(Date().timeIntervalSince1970),
-      category: category,
-      amount: amountDecimal,
-      transactionDate: date,
-      comment: comment.isEmpty ? nil : comment
-    )
+    
+    guard let accountId = try? await bankAccountsService.getUserAccount().id else { return }
+    
     switch mode {
     case .create:
-    //   _ = try? await bankAccountsService.getUserAccount()
-      await service.create(transaction: newTransaction)
+      _ = try? await service.create(
+        accountId: accountId,
+        category: category,
+        amount: amountDecimal,
+        transactionDate: date,
+        comment: comment.isEmpty ? nil : comment
+      )
     case .edit:
-      await service.update(transaction: newTransaction)
+      guard let transaction = transaction else { return }
+      let updated = Transaction(
+        id: transaction.id,
+        accountId: accountId,
+        category: category,
+        amount: amountDecimal,
+        transactionDate: date,
+        comment: comment.isEmpty ? nil : comment
+      )
+      _ = try? await service.update(transaction: updated)
     }
   }
   
   func delete() async {
     guard let id = transaction?.id else { return }
-    await service.delete(withId: id)
+    try? await service.delete(withId: id)
   }
   
   func updateDateOnly(_ newDate: Date) {
