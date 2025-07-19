@@ -16,6 +16,7 @@ enum BankAccountViewState: Equatable {
 class BankAccountCoordinatorViewModel: ObservableObject {
     @Published var currentState: BankAccountViewState = .overview
     @Published var errorMessage: String? = nil
+    @Published var isLoading: Bool = false
     
     private(set) var service: BankAccountsServiceProtocol
     private(set) var account: BankAccount?
@@ -26,6 +27,7 @@ class BankAccountCoordinatorViewModel: ObservableObject {
     
     // MARK: - Load Account
     func loadAccount() async {
+        await MainActor.run { self.isLoading = true; self.errorMessage = nil }
         do {
             let loadedAccount = try await service.getUserAccount()
             await MainActor.run {
@@ -36,6 +38,7 @@ class BankAccountCoordinatorViewModel: ObservableObject {
                 errorMessage = "Ошибка загрузки данных: \(error.localizedDescription)"
             }
         }
+        await MainActor.run { self.isLoading = false }
     }
     
     // MARK: - Switch to Edit Mode
@@ -45,6 +48,7 @@ class BankAccountCoordinatorViewModel: ObservableObject {
     
     // MARK: - Save Changes
     func saveChanges(balance: Decimal, currency: Currency) async {
+        await MainActor.run { self.isLoading = true; self.errorMessage = nil }
         do {
             let updatedAccount = try await service.updateAccount(balance: balance, currency: currency)
             await MainActor.run {
@@ -56,6 +60,7 @@ class BankAccountCoordinatorViewModel: ObservableObject {
                 errorMessage = "Ошибка сохранения: \(error.localizedDescription)"
             }
         }
+        await MainActor.run { self.isLoading = false }
     }
     
     // MARK: - Cancel Edit
