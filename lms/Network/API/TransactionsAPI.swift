@@ -21,13 +21,21 @@ final class TransactionsAPI: TransactionsAPIProtocol {
         self.networkClient = client
     }
     
+    private let iso8601Formatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        return formatter
+    }()
+    
     func createTransaction(accountId: Int, categoryId: Int, amount: Decimal, transactionDate: Date, comment: String?) async throws -> Transaction {
+        let amountString = String(format: "%.2f", NSDecimalNumber(decimal: amount).doubleValue)
         let dto = TransactionCreateDTO(
             accountId: accountId,
             categoryId: categoryId,
-            amount: NSDecimalNumber(decimal: amount).stringValue,
-            transactionDate: ISO8601DateFormatter().string(from: transactionDate),
-            comment: comment
+            amount: amountString,
+            transactionDate: iso8601Formatter.string(from: transactionDate),
+            comment: comment ?? ""
         )
         let request = Request.post(url: ApiEndpoints.transactions, body: dto)
         let response: TransactionResponseDTO = try await networkClient.send(request)
