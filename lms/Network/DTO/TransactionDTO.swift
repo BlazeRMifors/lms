@@ -22,12 +22,19 @@ struct TransactionUpdateDTO: Encodable {
     let transactionDate: String
     let comment: String?
     
+    private static let iso8601Formatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        return formatter
+    }()
+    
     static func from(_ transaction: Transaction) -> TransactionUpdateDTO {
         TransactionUpdateDTO(
             accountId: transaction.accountId,
             categoryId: transaction.category.id,
             amount: NSDecimalNumber(decimal: transaction.amount).stringValue,
-            transactionDate: ISO8601DateFormatter().string(from: transaction.transactionDate),
+            transactionDate: iso8601Formatter.string(from: transaction.transactionDate),
             comment: transaction.comment
         )
     }
@@ -43,18 +50,32 @@ struct TransactionResponseDTO: Decodable, Identifiable {
     let createdAt: String
     let updatedAt: String
     
+    private static let iso8601FormatterWithMs: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        return formatter
+    }()
+    
+    private static let iso8601Formatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        return formatter
+    }()
+    
     func toDomain() -> Transaction? {
-        guard let amountDecimal = Decimal(string: amount),
-              let date = ISO8601DateFormatter().date(from: transactionDate) else {
-            return nil
-        }
+        guard let amountDecimal = Decimal(string: amount) else { return nil }
+        let date = Self.iso8601FormatterWithMs.date(from: transactionDate)
+            ?? Self.iso8601Formatter.date(from: transactionDate)
+        guard let parsedDate = date else { return nil }
         
         return Transaction(
             id: id,
             accountId: account.id,
             category: category.toDomain(),
             amount: amountDecimal,
-            transactionDate: date,
+            transactionDate: parsedDate,
             comment: comment == "" ? nil : comment
         )
     }
