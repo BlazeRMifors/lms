@@ -11,7 +11,7 @@ protocol TransactionsAPIProtocol {
     func createTransaction(accountId: Int, categoryId: Int, amount: Decimal, transactionDate: Date, comment: String?) async throws -> Transaction
     func updateTransaction(_ transaction: Transaction) async throws -> Transaction
     func deleteTransaction(id: Int) async throws
-    func getTransactions(accountId: Int, startDate: String, endDate: String) async throws -> [Transaction]
+    func getTransactions(accountId: Int, startDate: Date, endDate: Date) async throws -> [Transaction]
 }
 
 final class TransactionsAPI: TransactionsAPIProtocol {
@@ -52,7 +52,7 @@ final class TransactionsAPI: TransactionsAPIProtocol {
         _ = try await networkClient.send(request) as EmptyResponse
     }
     
-    func getTransactions(accountId: Int, startDate: String, endDate: String) async throws -> [Transaction] {
+    func getTransactions(accountId: Int, startDate: Date, endDate: Date) async throws -> [Transaction] {
         let request = Request.get(url: ApiEndpoints.transactionsForAccount(accountId: accountId, startDate: startDate, endDate: endDate))
         let dtos: [TransactionResponseDTO] = try await networkClient.send(request)
         return dtos.compactMap { $0.toDomain() }
