@@ -18,6 +18,8 @@ final class AnalysisViewController: UIViewController {
   // MARK: - UI
   private let tableView = UITableView(frame: .zero, style: .insetGrouped)
   private var viewModel: AnalysisViewModel
+  private var loaderView: UIActivityIndicatorView?
+  private var errorAlert: UIAlertController?
   
   init(viewModel: AnalysisViewModel) {
     self.viewModel = viewModel
@@ -36,6 +38,7 @@ final class AnalysisViewController: UIViewController {
     super.viewDidLoad()
     setupUI()
     setupTableView()
+    setupObservers()
   }
   
   private func setupUI() {
@@ -61,6 +64,52 @@ final class AnalysisViewController: UIViewController {
     tableView.register(AnalysisSumCell.self, forCellReuseIdentifier: "SumCell")
     tableView.register(AnalysisDateCell.self, forCellReuseIdentifier: "DateCell")
     tableView.register(AnalysisSortCell.self, forCellReuseIdentifier: "SortCell")
+  }
+  
+  private func setupObservers() {
+    viewModel.onUpdate = { [weak self] in
+      self?.reloadData()
+      self?.updateLoading()
+      self?.updateErrorAlert()
+    }
+    
+    updateLoading()
+    updateErrorAlert()
+  }
+
+  private func updateLoading() {
+    if viewModel.isLoading {
+      if loaderView == nil {
+        let loader = UIActivityIndicatorView(style: .large)
+        loader.translatesAutoresizingMaskIntoConstraints = false
+        loader.color = .gray
+        view.addSubview(loader)
+        NSLayoutConstraint.activate([
+          loader.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+          loader.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+        ])
+        loader.startAnimating()
+        loaderView = loader
+      }
+    } else {
+      loaderView?.removeFromSuperview()
+      loaderView = nil
+    }
+  }
+
+  private func updateErrorAlert() {
+    if let message = viewModel.errorMessage, !message.isEmpty, errorAlert == nil {
+      let alert = UIAlertController(title: "Ошибка", message: message, preferredStyle: .alert)
+      alert.addAction(UIAlertAction(title: "OK", style: .default) { [weak self] _ in
+        self?.viewModel.errorMessage = nil
+        self?.errorAlert = nil
+      })
+      present(alert, animated: true)
+      errorAlert = alert
+    } else if viewModel.errorMessage == nil, let alert = errorAlert {
+      alert.dismiss(animated: true)
+      errorAlert = nil
+    }
   }
   
   private func reloadData() {

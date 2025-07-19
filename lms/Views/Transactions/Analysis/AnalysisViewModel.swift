@@ -23,7 +23,11 @@ final class AnalysisViewModel {
   var sortType: TransactionSortType = .date
   
   let service: TransactionsService
+  let bankAccountsService: BankAccountsService
+    
   private(set) var transactions: [Transaction] = []
+  var isLoading: Bool = false
+  var errorMessage: String? = nil
   
   convenience init(viewModel: TransactionsListViewModel) {
     self.init(
@@ -40,7 +44,8 @@ final class AnalysisViewModel {
     startDate: Date = Calendar.current.startOfDay(for: Date()),
     endDate: Date = Date(),
     sortType: TransactionSortType = .date,
-    service: TransactionsService = TransactionsService()
+    service: TransactionsService = TransactionsService(),
+    bankAccountsService: BankAccountsService = BankAccountsService()
   ) {
     self.direction = direction
     self.currency = currency
@@ -48,6 +53,7 @@ final class AnalysisViewModel {
     self.endDate = endDate.advanced(by: 1)
     self.sortType = sortType
     self.service = service
+    self.bankAccountsService = bankAccountsService
     self.totalAmount = 0
   }
   
@@ -56,15 +62,29 @@ final class AnalysisViewModel {
   }
   
   func loadTransactions() {
+    isLoading = true
+    errorMessage = nil
     Task {
-      let result = await service.getTransactions(
-        for: direction,
-        in: DateInterval(start: startDate, end: endDate)
-      )
-      await MainActor.run {
-        self.transactions = sortedTransactions(result)
-        self.totalAmount = self.transactions.reduce(0) { $0 + $1.amount }
-        self.onUpdate?()
+      do {
+          guard let accountId = try? await bankAccountsService.getAccountId() else { isLoading = false; return }
+          let result = try await service.getTransactions(
+            for: accountId,
+            with: direction,
+            in: DateInterval(start: startDate, end: endDate)
+          )
+        await MainActor.run {
+          self.transactions = sortedTransactions(result)
+          self.totalAmount = self.transactions.reduce(0) { $0 + $1.amount }
+          self.isLoading = false
+          self.onUpdate?()
+        }
+      } catch {
+        await MainActor.run {
+          self.transactions = []
+          self.errorMessage = error.localizedDescription
+          self.isLoading = false
+          self.onUpdate?()
+        }
       }
     }
   }
