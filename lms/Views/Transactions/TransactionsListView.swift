@@ -84,6 +84,13 @@ struct TransactionsListView: View {
           }
         }
         fabButton
+        if viewModel.isLoading {
+          Color.black.opacity(0.2).ignoresSafeArea()
+          ProgressView().scaleEffect(1.5)
+        }
+      }
+      .alert(isPresented: Binding(get: { viewModel.errorMessage != nil }, set: { _ in viewModel.errorMessage = nil })) {
+        Alert(title: Text("Ошибка"), message: Text(viewModel.errorMessage ?? ""), dismissButton: .default(Text("OK")))
       }
       .safeAreaInset(edge: .bottom, spacing: 0) {
         Color.clear.frame(height: 0)
@@ -185,6 +192,8 @@ final class TransactionsListViewModel {
   let bankAccountsService: BankAccountsService
   
   private(set) var transactions: [Transaction] = []
+  var isLoading: Bool = false
+  var errorMessage: String? = nil
   
   var totalAmount: Decimal {
     transactions.reduce(0) { result, transaction in
@@ -215,9 +224,11 @@ final class TransactionsListViewModel {
   }
   
   func loadTransactions() {
+    isLoading = true
+    errorMessage = nil
     Task {
       do {
-        guard let accountId = try? await bankAccountsService.getAccountId() else { return }
+        guard let accountId = try? await bankAccountsService.getAccountId() else { isLoading = false; return }
         
         let result = try await service.getTransactions(
           for: accountId,
@@ -226,10 +237,13 @@ final class TransactionsListViewModel {
         )
         await MainActor.run {
           self.transactions = sortedTransactions(result)
+          self.isLoading = false
         }
       } catch {
         await MainActor.run {
           self.transactions = []
+          self.errorMessage = error.localizedDescription
+          self.isLoading = false
         }
       }
     }
