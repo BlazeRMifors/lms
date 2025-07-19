@@ -18,7 +18,7 @@ struct lmsApp: App {
     UISearchBar.appearance().tintColor = .action
     
     viewModel = MainTabViewModel(
-      transactionService: TransactionsService(),
+      transactionService: TransactionsService(storage: makeTransactionsStorage()),
       bankAccountService: BankAccountsService()
     )
   }
