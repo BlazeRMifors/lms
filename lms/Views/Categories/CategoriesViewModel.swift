@@ -12,7 +12,8 @@ final class CategoriesViewModel {
   var searchText: String = ""
   private(set) var allCategories: [Category] = []
   private(set) var filteredCategories: [Category] = []
-  private(set) var isLoading: Bool = false
+  var isLoading: Bool = false
+  var errorMessage: String? = nil
   
   private let categoriesService: CategoriesService
   
@@ -32,6 +33,7 @@ final class CategoriesViewModel {
   @MainActor
   private func runLoadingCategories() {
     isLoading = true
+    errorMessage = nil
   }
   
   @MainActor
@@ -39,6 +41,13 @@ final class CategoriesViewModel {
     allCategories = categories
     filteredCategories = categories
     isLoading = false
+    errorMessage = nil
+  }
+
+  @MainActor
+  private func handleError(_ error: Error) {
+    isLoading = false
+    errorMessage = error.localizedDescription
   }
   
   func updateSearch(text: String) {

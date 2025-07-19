@@ -21,9 +21,6 @@ struct CategoriesView: View {
   var body: some View {
     NavigationStack {
       ZStack {
-        if viewModel.isLoading {
-          ProgressView()
-        }
         List {
           Section(header: Text("статьи")
             .font(.subheadline)
@@ -45,7 +42,13 @@ struct CategoriesView: View {
             }
           }
         }
-        .opacity(viewModel.isLoading ? 0 : 1)
+        if viewModel.isLoading {
+          Color.black.opacity(0.2).ignoresSafeArea()
+          ProgressView().scaleEffect(1.5)
+        }
+      }
+      .alert(isPresented: Binding(get: { viewModel.errorMessage != nil }, set: { _ in viewModel.errorMessage = nil })) {
+        Alert(title: Text("Ошибка"), message: Text(viewModel.errorMessage ?? ""), dismissButton: .default(Text("OK")))
       }
       .navigationTitle("Мои статьи")
       .searchable(text: $viewModel.searchText, placement: .navigationBarDrawer(displayMode: .always))
