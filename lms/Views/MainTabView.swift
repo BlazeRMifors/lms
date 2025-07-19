@@ -55,9 +55,11 @@ struct MainTabView: View {
       .tint(.accent)
       .onAppear {
         viewModel.onAppear()
-        isOffline = viewModel.isOffline
+        isOffline = !NetworkMonitor.shared.isConnected
       }
-      .onChange(of: viewModel.isOffline) { isOffline = $0 }
+      .onChange(of: NetworkMonitor.shared.isConnected) { isConnected in
+        isOffline = !isConnected
+      }
     }
   }
 }
