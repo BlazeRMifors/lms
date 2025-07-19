@@ -17,6 +17,10 @@ struct lmsApp: App {
     UITextField.appearance(whenContainedInInstancesOf: [UISearchBar.self]).tintColor = .action
     UISearchBar.appearance().tintColor = .action
     
+    Task {
+      await migrateTransactionsStorageIfNeeded()
+    }
+    
     viewModel = MainTabViewModel(
       transactionService: TransactionsService(storage: makeTransactionsStorage()),
       bankAccountService: BankAccountsService()
