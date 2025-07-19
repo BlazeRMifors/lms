@@ -92,6 +92,14 @@ struct BankAccountCoordinatorView: View {
         )
       }
     }
+    .onAppear {
+      Task {
+        await coordinatorVM.loadAccount()
+        if let account = coordinatorVM.account {
+          overviewVM?.updateData(balance: account.balance, currency: account.currency)
+        }
+      }
+    }
   }
   
   private func hideKeyboard() {
