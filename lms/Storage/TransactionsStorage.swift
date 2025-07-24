@@ -13,5 +13,6 @@ protocol TransactionsStorage {
     func insert(_ transaction: Transaction) async
     func update(_ transaction: Transaction) async
     func remove(id: Int) async
+    func findAndRemove(accountId: Int, categoryId: Int, amount: Decimal, transactionDate: Date, comment: String?) async
     func save() async
 } 

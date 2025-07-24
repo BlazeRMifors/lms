@@ -52,10 +52,6 @@ final class TransactionModel {
     func toDomain() -> Transaction {
         Transaction(id: id, accountId: accountId, category: category.toDomain(), amount: amount, transactionDate: transactionDate, comment: comment)
     }
-    
-    static func from(_ tx: Transaction) -> TransactionModel {
-        TransactionModel(id: tx.id, accountId: tx.accountId, category: CategoryModel.from(tx.category), amount: tx.amount, transactionDate: tx.transactionDate, comment: tx.comment)
-    }
 }
 
 final class TransactionsSwiftDataStorage: TransactionsStorage {
@@ -70,7 +66,15 @@ final class TransactionsSwiftDataStorage: TransactionsStorage {
         return await MainActor.run {
             let context = container.mainContext
             let models = (try? context.fetch(FetchDescriptor<TransactionModel>())) ?? []
-            return models.map { $0.toDomain() }
+            let transactions = models.map { $0.toDomain() }
+            
+            // Дедупликация по id на всякий случай
+            var uniqueTransactions: [Int: Transaction] = [:]
+            for tx in transactions {
+                uniqueTransactions[tx.id] = tx
+            }
+            
+            return Array(uniqueTransactions.values)
         }
     }
     
@@ -85,8 +89,45 @@ final class TransactionsSwiftDataStorage: TransactionsStorage {
     func insert(_ transaction: Transaction) async {
         await MainActor.run {
             let context = container.mainContext
-            let model = TransactionModel.from(transaction)
-            context.insert(model)
+            
+            // Проверяем, есть ли уже транзакция с таким id
+            let allModels = (try? context.fetch(FetchDescriptor<TransactionModel>())) ?? []
+            if let existingModel = allModels.first(where: { $0.id == transaction.id }) {
+                // Обновляем существующую транзакцию
+                // Ищем существующую категорию или создаём новую
+                let categoryModels = (try? context.fetch(FetchDescriptor<CategoryModel>())) ?? []
+                let categoryModel = categoryModels.first { $0.id == transaction.category.id } ?? {
+                    let newCategory = CategoryModel.from(transaction.category)
+                    context.insert(newCategory)
+                    return newCategory
+                }()
+                
+                existingModel.accountId = transaction.accountId
+                existingModel.category = categoryModel
+                existingModel.amount = transaction.amount
+                existingModel.transactionDate = transaction.transactionDate
+                existingModel.comment = transaction.comment
+            } else {
+                // Создаём новую транзакцию
+                // Ищем существующую категорию или создаём новую
+                let categoryModels = (try? context.fetch(FetchDescriptor<CategoryModel>())) ?? []
+                let categoryModel = categoryModels.first { $0.id == transaction.category.id } ?? {
+                    let newCategory = CategoryModel.from(transaction.category)
+                    context.insert(newCategory)
+                    return newCategory
+                }()
+                
+                // Создаём TransactionModel с существующей CategoryModel
+                let model = TransactionModel(
+                    id: transaction.id,
+                    accountId: transaction.accountId,
+                    category: categoryModel,
+                    amount: transaction.amount,
+                    transactionDate: transaction.transactionDate,
+                    comment: transaction.comment
+                )
+                context.insert(model)
+            }
         }
     }
     
@@ -95,8 +136,16 @@ final class TransactionsSwiftDataStorage: TransactionsStorage {
             let context = container.mainContext
             let allModels = (try? context.fetch(FetchDescriptor<TransactionModel>())) ?? []
             if let model = allModels.first(where: { $0.id == transaction.id }) {
+                // Ищем существующую категорию или создаём новую
+                let categoryModels = (try? context.fetch(FetchDescriptor<CategoryModel>())) ?? []
+                let categoryModel = categoryModels.first { $0.id == transaction.category.id } ?? {
+                    let newCategory = CategoryModel.from(transaction.category)
+                    context.insert(newCategory)
+                    return newCategory
+                }()
+                
                 model.accountId = transaction.accountId
-                model.category = CategoryModel.from(transaction.category)
+                model.category = categoryModel
                 model.amount = transaction.amount
                 model.transactionDate = transaction.transactionDate
                 model.comment = transaction.comment
@@ -109,6 +158,27 @@ final class TransactionsSwiftDataStorage: TransactionsStorage {
             let context = container.mainContext
             let allModels = (try? context.fetch(FetchDescriptor<TransactionModel>())) ?? []
             if let model = allModels.first(where: { $0.id == id }) {
+                context.delete(model)
+            }
+        }
+    }
+    
+    func findAndRemove(accountId: Int, categoryId: Int, amount: Decimal, transactionDate: Date, comment: String?) async {
+        await MainActor.run {
+            let context = container.mainContext
+            let allModels = (try? context.fetch(FetchDescriptor<TransactionModel>())) ?? []
+            
+            // Находим транзакции с совпадающими параметрами
+            let matchingModels = allModels.filter { model in
+                model.accountId == accountId &&
+                model.category.id == categoryId &&
+                model.amount == amount &&
+                abs(model.transactionDate.timeIntervalSince(transactionDate)) < 60 && // разница меньше минуты
+                model.comment == comment
+            }
+            
+            // Удаляем найденные транзакции
+            for model in matchingModels {
                 context.delete(model)
             }
         }

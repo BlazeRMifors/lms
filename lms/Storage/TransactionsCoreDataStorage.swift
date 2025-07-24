@@ -66,25 +66,63 @@ final class TransactionsCoreDataStorage: TransactionsStorage {
     }
     
     func remove(id: Int) async {
-        let request = NSFetchRequest<TransactionEntity>(entityName: "TransactionEntity")
-        request.predicate = NSPredicate(format: "id == %d", id)
-        do {
-            let result = try context.fetch(request)
-            for entity in result {
-                context.delete(entity)
+        let context = container.viewContext
+        await context.perform {
+            let request: NSFetchRequest<NSManagedObject> = NSFetchRequest(entityName: "Transaction")
+            request.predicate = NSPredicate(format: "id == %d", id)
+            
+            do {
+                let results = try context.fetch(request)
+                for object in results {
+                    context.delete(object)
+                }
+            } catch {
+                print("[TransactionsCoreDataStorage] Ошибка удаления: \(error)")
             }
-            await save()
-        } catch {
-            print("[TransactionsCoreDataStorage] Ошибка удаления: \(error)")
+        }
+    }
+    
+    func findAndRemove(accountId: Int, categoryId: Int, amount: Decimal, transactionDate: Date, comment: String?) async {
+        let context = container.viewContext
+        await context.perform {
+            let request: NSFetchRequest<NSManagedObject> = NSFetchRequest(entityName: "Transaction")
+            
+            // Создаем составной предикат для поиска по параметрам
+            var predicates: [NSPredicate] = [
+                NSPredicate(format: "accountId == %d", accountId),
+                NSPredicate(format: "categoryId == %d", categoryId),
+                NSPredicate(format: "amount == %@", amount as NSDecimalNumber),
+                NSPredicate(format: "ABS(transactionDate.timeIntervalSinceDate:%@) < 60", transactionDate as NSDate)
+            ]
+            
+            if let comment = comment {
+                predicates.append(NSPredicate(format: "comment == %@", comment))
+            } else {
+                predicates.append(NSPredicate(format: "comment == nil"))
+            }
+            
+            request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
+            
+            do {
+                let results = try context.fetch(request)
+                for object in results {
+                    context.delete(object)
+                }
+            } catch {
+                print("[TransactionsCoreDataStorage] Ошибка поиска и удаления: \(error)")
+            }
         }
     }
     
     func save() async {
-        if context.hasChanges {
-            do {
-                try context.save()
-            } catch {
-                print("[TransactionsCoreDataStorage] Ошибка сохранения: \(error)")
+        let context = container.viewContext
+        await context.perform {
+            if context.hasChanges {
+                do {
+                    try context.save()
+                } catch {
+                    print("[TransactionsCoreDataStorage] Ошибка сохранения: \(error)")
+                }
             }
         }
     }

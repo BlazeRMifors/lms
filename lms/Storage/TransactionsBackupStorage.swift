@@ -14,6 +14,7 @@ enum TransactionBackupAction {
 }
 
 struct TransactionBackupRecord {
+    let localId: UUID
     let transaction: Transaction
     let action: TransactionBackupAction
 }
@@ -21,6 +22,6 @@ struct TransactionBackupRecord {
 protocol TransactionsBackupStorage {
     func all() -> [TransactionBackupRecord]
     func insert(_ record: TransactionBackupRecord)
-    func remove(id: Int)
+    func remove(localId: UUID)
     func save()
 } 
