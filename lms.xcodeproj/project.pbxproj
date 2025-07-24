@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		8E3E933D2E2B5CAC00B2F1DD /* Settings.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 8E3E933C2E2B5CAC00B2F1DD /* Settings.bundle */; };
+		8EC2D4DE2E3294930055FC11 /* PieChart in Frameworks */ = {isa = PBXBuildFile; productRef = 8EC2D4DD2E3294930055FC11 /* PieChart */; };
+		8EC2D4E12E3295030055FC11 /* PieChart in Frameworks */ = {isa = PBXBuildFile; productRef = 8EC2D4E02E3295030055FC11 /* PieChart */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -57,6 +59,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8EC2D4E12E3295030055FC11 /* PieChart in Frameworks */,
+				8EC2D4DE2E3294930055FC11 /* PieChart in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -118,6 +122,8 @@
 			);
 			name = lms;
 			packageProductDependencies = (
+				8EC2D4DD2E3294930055FC11 /* PieChart */,
+				8EC2D4E02E3295030055FC11 /* PieChart */,
 			);
 			productName = lms;
 			productReference = 8EFF289E2E017B29008062F8 /* lms.app */;
@@ -201,6 +207,9 @@
 			);
 			mainGroup = 8EFF28952E017B29008062F8;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				8EC2D4DF2E3295030055FC11 /* XCLocalSwiftPackageReference "Utilities" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 8EFF289F2E017B29008062F8 /* Products */;
 			projectDirPath = "";
@@ -564,6 +573,24 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		8EC2D4DF2E3295030055FC11 /* XCLocalSwiftPackageReference "Utilities" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Utilities;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		8EC2D4DD2E3294930055FC11 /* PieChart */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = PieChart;
+		};
+		8EC2D4E02E3295030055FC11 /* PieChart */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = PieChart;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 8EFF28962E017B29008062F8 /* Project object */;
 }
