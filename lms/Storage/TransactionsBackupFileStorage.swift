@@ -18,8 +18,8 @@ final class TransactionsBackupFileStorage: TransactionsBackupStorage {
         records.append(record)
     }
     
-    func remove(id: Int) {
-        records.removeAll { $0.transaction.id == id }
+    func remove(localId: UUID) {
+        records.removeAll { $0.localId == localId }
     }
     
     func save() {
