@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import PieChart
 
 @Observable
 final class AnalysisViewModel {
@@ -122,6 +123,33 @@ final class AnalysisViewModel {
   func percent(for transaction: Transaction) -> Double {
     guard totalAmount != 0 else { return 0 }
     return (transaction.amount as NSDecimalNumber).doubleValue / (totalAmount as NSDecimalNumber).doubleValue * 100
+  }
+  
+  // MARK: - PieChart Data
+  func createPieChartEntities() -> [PieChartEntity] {
+    let groupedTransactions = Dictionary(grouping: transactions) { $0.category.name }
+    
+    let categoryEntities: [PieChartEntity] = groupedTransactions.compactMap { categoryName, transactions in
+      let categoryTotal = transactions.reduce(Decimal.zero) { $0 + abs($1.amount) }
+      guard categoryTotal > 0 else { return nil }
+      return PieChartEntity(value: categoryTotal, label: categoryName)
+    }
+    
+    let sortedEntities = categoryEntities.sorted { $0.value > $1.value }
+    
+    let maxIndividualSegments = 5
+    var result = Array(sortedEntities.prefix(maxIndividualSegments))
+    
+    if sortedEntities.count > maxIndividualSegments {
+      let remainingEntities = Array(sortedEntities.dropFirst(maxIndividualSegments))
+      let othersValue = remainingEntities.reduce(Decimal.zero) { $0 + $1.value }
+      if othersValue > 0 {
+        let othersEntity = PieChartEntity(value: othersValue, label: "Остальные")
+        result.append(othersEntity)
+      }
+    }
+    
+    return result
   }
   
   private func sortedTransactions(_ transactions: [Transaction]) -> [Transaction] {

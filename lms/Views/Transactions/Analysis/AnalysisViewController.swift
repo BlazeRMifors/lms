@@ -1,10 +1,12 @@
 import UIKit
 import SwiftUI
+import PieChart
 
 final class AnalysisViewController: UIViewController {
   
   private enum Section: Int, CaseIterable {
     case setting = 0
+    case chart
     case operations
   }
   
@@ -20,6 +22,7 @@ final class AnalysisViewController: UIViewController {
   private var viewModel: AnalysisViewModel
   private var loaderView: UIActivityIndicatorView?
   private var errorAlert: UIAlertController?
+  private var pieChartView: PieChartView?
   
   init(viewModel: AnalysisViewModel) {
     self.viewModel = viewModel
@@ -64,6 +67,7 @@ final class AnalysisViewController: UIViewController {
     tableView.register(AnalysisSumCell.self, forCellReuseIdentifier: "SumCell")
     tableView.register(AnalysisDateCell.self, forCellReuseIdentifier: "DateCell")
     tableView.register(AnalysisSortCell.self, forCellReuseIdentifier: "SortCell")
+    tableView.register(UITableViewCell.self, forCellReuseIdentifier: "PieChartCell")
   }
   
   private func setupObservers() {
@@ -114,6 +118,11 @@ final class AnalysisViewController: UIViewController {
   
   private func reloadData() {
     tableView.reloadData()
+    
+    if let pieChartView = pieChartView {
+      let entities = viewModel.createPieChartEntities()
+      pieChartView.updateEntities(entities)
+    }
   }
   
   private func presentTransactionEditView(for transaction: Transaction) {
@@ -143,19 +152,45 @@ extension AnalysisViewController: UITableViewDataSource, UITableViewDelegate {
   }
   
   func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-    section == Section.setting.rawValue ? SettingRow.allCases.count : viewModel.transactions.count
+    switch Section(rawValue: section) {
+    case .setting:
+      return SettingRow.allCases.count
+    case .chart:
+      return viewModel.transactions.isEmpty ? 0 : 1
+    case .operations:
+      return viewModel.transactions.count
+    case .none:
+      return 0
+    }
   }
   
   func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-    section == Section.operations.rawValue ? "Операции" : nil
+    switch Section(rawValue: section) {
+    case .operations:
+      return "Операции"
+    case .setting, .chart:
+      return nil
+    case .none:
+      return nil
+    }
   }
   
   func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-    indexPath.section == Section.setting.rawValue ? 44 : 60
+    switch Section(rawValue: indexPath.section) {
+    case .setting:
+      return 44
+    case .chart:
+      return 185
+    case .operations:
+      return 60
+    case .none:
+      return 44
+    }
   }
   
   func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-    if indexPath.section == 0 {
+    switch Section(rawValue: indexPath.section) {
+    case .setting:
       switch indexPath.row {
       case 0:
         let cell = tableView.dequeueReusableCell(withIdentifier: "DateCell", for: indexPath) as! AnalysisDateCell
@@ -194,7 +229,13 @@ extension AnalysisViewController: UITableViewDataSource, UITableViewDelegate {
       default:
         return UITableViewCell()
       }
-    } else {
+      
+    case .chart:
+      let cell = tableView.dequeueReusableCell(withIdentifier: "PieChartCell", for: indexPath)
+      setupPieChartCell(cell)
+      return cell
+      
+    case .operations:
       guard let cell = tableView.dequeueReusableCell(withIdentifier: "TransactionCell", for: indexPath) as? AnalysisTransactionCell else {
         return UITableViewCell()
       }
@@ -209,16 +250,42 @@ extension AnalysisViewController: UITableViewDataSource, UITableViewDelegate {
       )
       cell.configure(with: vm)
       return cell
+      
+    case .none:
+      return UITableViewCell()
     }
   }
   
   func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
     tableView.deselectRow(at: indexPath, animated: true)
     
-    // Обрабатываем только ячейки транзакций
     guard indexPath.section == Section.operations.rawValue else { return }
     
     let transaction = viewModel.transactions[indexPath.row]
     presentTransactionEditView(for: transaction)
+  }
+  
+  // MARK: - PieChart Setup
+  private func setupPieChartCell(_ cell: UITableViewCell) {
+    pieChartView?.removeFromSuperview()
+    
+    let entities = viewModel.createPieChartEntities()
+    pieChartView = PieChartView(entities: entities)
+    
+    guard let pieChartView = pieChartView else { return }
+    
+    pieChartView.translatesAutoresizingMaskIntoConstraints = false
+    cell.contentView.addSubview(pieChartView)
+    
+    NSLayoutConstraint.activate([
+      pieChartView.topAnchor.constraint(equalTo: cell.contentView.topAnchor, constant: 0),
+      pieChartView.leadingAnchor.constraint(equalTo: cell.contentView.leadingAnchor, constant: 20),
+      pieChartView.trailingAnchor.constraint(equalTo: cell.contentView.trailingAnchor, constant: -20),
+      pieChartView.bottomAnchor.constraint(equalTo: cell.contentView.bottomAnchor, constant: 0)
+    ])
+    
+    cell.backgroundColor = .clear
+    cell.contentView.backgroundColor = .clear
+    cell.selectionStyle = .none
   }
 }

@@ -20,7 +20,7 @@ public class PieChartView: UIView {
     
     // MARK: - Private Properties
     private var segments: [PieSegment] = []
-    private let margin: CGFloat = 20
+    private let margin: CGFloat = 0
     private let legendSpacing: CGFloat = 8
     private let ringWidth: CGFloat = 8
     
