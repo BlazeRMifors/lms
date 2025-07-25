@@ -29,7 +29,7 @@ struct lmsApp: App {
   
   var body: some Scene {
     WindowGroup {
-      MainTabView(viewModel: viewModel)
+      LaunchCoordinatorView(viewModel: viewModel)
     }
   }
 }
