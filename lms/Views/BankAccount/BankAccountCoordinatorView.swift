@@ -12,8 +12,11 @@ struct BankAccountCoordinatorView: View {
   @State private var overviewVM: BankAccountOverviewViewModel?
   @State private var editVM: BankAccountEditViewModel?
   
-  init(service: BankAccountsServiceProtocol) {
+  private let transactionsService: TransactionsServiceProtocol
+  
+  init(service: BankAccountsServiceProtocol, transactionsService: TransactionsServiceProtocol = TransactionsService()) {
     _coordinatorVM = StateObject(wrappedValue: BankAccountCoordinatorViewModel(service: service))
+    self.transactionsService = transactionsService
   }
   
   var body: some View {
@@ -62,13 +65,12 @@ struct BankAccountCoordinatorView: View {
           }
         }
         .refreshable {
-          print("Coordinator pull to refresh triggered")
           await coordinatorVM.loadAccount()
-          // Обновляем данные в overviewVM
+
           if let account = coordinatorVM.account {
             overviewVM?.updateData(balance: account.balance, currency: account.currency)
+            await overviewVM?.refreshData()
           }
-          print("Coordinator pull to refresh completed")
         }
         .navigationTitle("Мой счет")
         .background(.bg)
@@ -92,13 +94,14 @@ struct BankAccountCoordinatorView: View {
       if coordinatorVM.account == nil {
         await coordinatorVM.loadAccount()
       }
-      // Создаем overviewVM после загрузки данных
       if overviewVM == nil {
         overviewVM = BankAccountOverviewViewModel(
           service: coordinatorVM.service,
+          transactionsService: transactionsService,
           balance: coordinatorVM.account?.balance ?? 0,
           currency: coordinatorVM.account?.currency ?? .rub
         )
+        await overviewVM?.refreshData()
       }
     }
     .onAppear {
@@ -106,13 +109,13 @@ struct BankAccountCoordinatorView: View {
         await coordinatorVM.loadAccount()
         if let account = coordinatorVM.account {
           overviewVM?.updateData(balance: account.balance, currency: account.currency)
+          await overviewVM?.refreshData()
         }
       }
     }
   }
   
   private func hideKeyboard() {
-    print("hideKeyboard")
     UIApplication.shared.sendAction(
       #selector(UIResponder.resignFirstResponder),
       to: nil,
