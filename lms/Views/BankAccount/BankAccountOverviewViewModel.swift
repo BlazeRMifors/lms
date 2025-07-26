@@ -28,6 +28,7 @@ final class BankAccountOverviewViewModel {
   private(set) var isBalanceHidden = false
   private(set) var isLoading = false
   private(set) var dailyBalances: [DailyBalance] = []
+  private(set) var errorMessage: String?
   
   init(service: BankAccountsServiceProtocol, transactionsService: TransactionsServiceProtocol, balance: Decimal, currency: Currency, isBalanceHidden: Bool = false) {
     self.service = service
@@ -46,9 +47,14 @@ final class BankAccountOverviewViewModel {
     self.currency = currency
   }
   
+  func clearError() {
+    errorMessage = nil
+  }
+  
   @MainActor
   func refreshData() async {
     isLoading = true
+    errorMessage = nil
     
     do {
       let account = try await service.getUserAccount()
@@ -56,7 +62,7 @@ final class BankAccountOverviewViewModel {
       currency = account.currency
       await loadBalanceHistory(for: account.id)
     } catch {
-      // TODO: Показать ошибку пользователю
+      errorMessage = "Failed to load account data: \(error.localizedDescription)"
     }
     
     isLoading = false
@@ -109,14 +115,7 @@ final class BankAccountOverviewViewModel {
       
       self.dailyBalances = dailyBalances
     } catch {
-      var testBalances: [DailyBalance] = []
-      for dayOffset in 0...29 {
-        guard let dayDate = calendar.date(byAdding: .day, value: -dayOffset, to: endDate) else { continue }
-        let dayStart = calendar.startOfDay(for: dayDate)
-        let testBalance = balance + Decimal(Int.random(in: -10000...10000))
-        testBalances.insert(DailyBalance(date: dayStart, balance: testBalance), at: 0)
-      }
-      self.dailyBalances = testBalances
+      errorMessage = "Failed to load balance history: \(error.localizedDescription)"
     }
   }
 }
