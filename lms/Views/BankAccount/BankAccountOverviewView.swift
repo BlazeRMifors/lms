@@ -101,40 +101,60 @@ struct BankAccountOverviewView: View {
           .frame(height: 200)
           .frame(maxWidth: .infinity)
       } else {
-        Chart(viewModel.dailyBalances) { dailyBalance in
-          BarMark(
-            x: .value("Date", dailyBalance.date, unit: viewModel.selectedPeriod == .daily ? .day : .month),
-            y: .value("Balance", dailyBalance.balance.doubleValue),
-            width: .ratio(0.6)
-          )
-          .foregroundStyle(dailyBalance.isPositive ? .green : .red)
-          .cornerRadius(2)
-        }
-        .frame(height: 200)
-        .chartXAxis {
-          AxisMarks(values: .stride(by: viewModel.selectedPeriod == .daily ? .day : .month, count: viewModel.selectedPeriod == .daily ? 7 : 6)) { value in
-            if let date = value.as(Date.self) {
-              AxisValueLabel {
-                Text(formatDateForChart(date))
-                  .font(.caption2)
-                  .foregroundColor(.secondary)
-              }
-              AxisGridLine()
-              AxisTick()
-            }
+        VStack(spacing: 8) {
+          Chart(viewModel.dailyBalances) { dailyBalance in
+            BarMark(
+              x: .value("Date", dailyBalance.date, unit: viewModel.selectedPeriod == .daily ? .day : .month),
+              y: .value("Balance", dailyBalance.balance.doubleValue),
+              width: .ratio(0.6)
+            )
+            .foregroundStyle(dailyBalance.isPositive ? .green : .red)
+            .cornerRadius(2)
           }
+          .frame(height: 200)
+          .chartXAxis(.hidden)
+          .chartYAxis(.hidden)
+          .chartPlotStyle { plotArea in
+            plotArea
+              .background(.clear)
+          }
+          .animation(.easeInOut(duration: 0.3), value: viewModel.selectedPeriod)
+          .id(viewModel.selectedPeriod)
+          
+          dateLabels
         }
-        .chartYAxis(.hidden)
-        .chartPlotStyle { plotArea in
-          plotArea
-            .background(.clear)
-        }
-        .animation(.easeInOut(duration: 0.3), value: viewModel.selectedPeriod)
-        .id(viewModel.selectedPeriod)
       }
     }
     .padding()
     .cornerRadius(10)
+  }
+  
+  private var dateLabels: some View {
+    HStack {
+      if let firstDate = viewModel.dailyBalances.first?.date {
+        Text(formatDateForChart(firstDate))
+          .font(.caption2)
+          .foregroundColor(.secondary)
+      }
+      
+      Spacer()
+      
+      if viewModel.dailyBalances.count > 1 {
+        let middleIndex = viewModel.dailyBalances.count / 2
+        let middleDate = viewModel.dailyBalances[middleIndex].date
+        Text(formatDateForChart(middleDate))
+          .font(.caption2)
+          .foregroundColor(.secondary)
+      }
+      
+      Spacer()
+      
+      if let lastDate = viewModel.dailyBalances.last?.date {
+        Text(formatDateForChart(lastDate))
+          .font(.caption2)
+          .foregroundColor(.secondary)
+      }
+    }
   }
   
   private func formatDateForChart(_ date: Date) -> String {
