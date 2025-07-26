@@ -57,7 +57,7 @@ final class AnalysisViewController: UIViewController {
   override func viewWillAppear(_ animated: Bool) {
     super.viewWillAppear(animated)
     viewModel.loadTransactions()
-    reloadData()
+    reloadData(animated: false)
   }
   
   private func setupTableView() {
@@ -117,11 +117,19 @@ final class AnalysisViewController: UIViewController {
   }
   
   private func reloadData() {
+    reloadData(animated: true)
+  }
+  
+  private func reloadData(animated: Bool = true) {
     tableView.reloadData()
     
     if let pieChartView = pieChartView {
       let entities = viewModel.createPieChartEntities()
-      pieChartView.updateEntities(entities)
+      if animated {
+        pieChartView.updateEntitiesAnimated(entities)
+      } else {
+        pieChartView.updateEntities(entities)
+      }
     }
   }
   
