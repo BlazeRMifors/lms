@@ -10,6 +10,7 @@ import Charts
 
 struct BankAccountOverviewView: View {
   @State var viewModel: BankAccountOverviewViewModel
+  @State private var selectedDate: Date?
   
   init(viewModel: BankAccountOverviewViewModel) {
     self.viewModel = viewModel
@@ -63,6 +64,7 @@ struct BankAccountOverviewView: View {
     Picker("Период статистики", selection: Binding(
       get: { viewModel.selectedPeriod },
       set: { newValue in
+        selectedDate = nil
         withAnimation(.easeInOut(duration: 0.3)) {
           viewModel.changePeriod(to: newValue)
         }
@@ -110,16 +112,29 @@ struct BankAccountOverviewView: View {
             )
             .foregroundStyle(dailyBalance.isPositive ? .green : .red)
             .cornerRadius(2)
+            .opacity(selectedDate == nil ? 1.0 : (isDaySelected(dailyBalance.date) ? 1.0 : 0.6))
           }
           .frame(height: 200)
+          .chartXSelection(value: $selectedDate)
           .chartXAxis(.hidden)
           .chartYAxis(.hidden)
+          .chartBackground { chartProxy in
+            GeometryReader { geometry in
+              if let selectedDate = selectedDate,
+                 let selectedBalance = getBalance(for: selectedDate) {
+                tooltipView(for: selectedBalance, date: selectedDate, in: geometry, chartProxy: chartProxy)
+              }
+            }
+          }
           .chartPlotStyle { plotArea in
             plotArea
               .background(.clear)
           }
           .animation(.easeInOut(duration: 0.3), value: viewModel.selectedPeriod)
           .id(viewModel.selectedPeriod)
+          .onTapGesture {
+            selectedDate = nil
+          }
           
           dateLabels
         }
@@ -161,6 +176,48 @@ struct BankAccountOverviewView: View {
     let formatter = DateFormatter()
     formatter.dateFormat = viewModel.selectedPeriod == .daily ? "dd.MM" : "MMM yy"
     return formatter.string(from: date)
+  }
+  
+  private func isDaySelected(_ date: Date) -> Bool {
+    guard let selectedDate = selectedDate else { return false }
+    let calendar = Calendar.current
+    
+    if viewModel.selectedPeriod == .daily {
+      return calendar.isDate(date, inSameDayAs: selectedDate)
+    } else {
+      let dateComponents = calendar.dateComponents([.year, .month], from: date)
+      let selectedComponents = calendar.dateComponents([.year, .month], from: selectedDate)
+      return dateComponents.year == selectedComponents.year && dateComponents.month == selectedComponents.month
+    }
+  }
+  
+  private func getBalance(for date: Date) -> Decimal? {
+    return viewModel.dailyBalances.first { balance in
+      isDaySelected(balance.date)
+    }?.balance
+  }
+  
+  private func tooltipView(for balance: Decimal, date: Date, in geometry: GeometryProxy, chartProxy: ChartProxy) -> some View {
+    let dateX = chartProxy.position(forX: date) ?? 0
+    let clampedX = min(max(dateX - 50, 10), geometry.size.width - 110)
+    
+    return VStack(spacing: 4) {
+      Text(formatDateForChart(date))
+        .font(.caption2)
+        .fontWeight(.medium)
+      Text(balance.formatted(.currency(code: viewModel.currency.rawValue)))
+        .font(.caption)
+        .fontWeight(.bold)
+        .foregroundColor(balance >= 0 ? .green : .red)
+    }
+    .padding(.horizontal, 8)
+    .padding(.vertical, 4)
+    .background(
+      RoundedRectangle(cornerRadius: 6)
+        .fill(Color(UIColor.systemBackground))
+        .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+    )
+    .position(x: clampedX + 50, y: 30)
   }
 }
 
