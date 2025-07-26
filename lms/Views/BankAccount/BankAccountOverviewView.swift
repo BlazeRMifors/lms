@@ -60,7 +60,24 @@ struct BankAccountOverviewView: View {
   
   private var balanceHistoryChart: some View {
     VStack(alignment: .leading, spacing: 12) {
-      if viewModel.dailyBalances.isEmpty {
+      if let errorMessage = viewModel.errorMessage {
+        VStack(spacing: 8) {
+          Text(errorMessage)
+            .font(.caption)
+            .foregroundColor(.red)
+            .multilineTextAlignment(.center)
+          
+          Button("Повторить") {
+            Task {
+              await viewModel.refreshData()
+            }
+          }
+          .font(.caption)
+          .foregroundColor(.blue)
+        }
+        .frame(height: 200)
+        .frame(maxWidth: .infinity)
+      } else if viewModel.dailyBalances.isEmpty {
         Text("Нет данных для отображения")
           .font(.caption)
           .foregroundColor(.secondary)

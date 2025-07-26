@@ -30,14 +30,12 @@ struct BankAccountCoordinatorView: View {
                 .toolbar {
                   ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
-                      // Создаем editVM с колбэком для сохранения
                       editVM = BankAccountEditViewModel(
                         balance: coordinatorVM.account?.balance ?? 0,
                         currency: coordinatorVM.account?.currency ?? .rub,
                         onSave: { balance, currency in
                           Task {
                             await coordinatorVM.saveChanges(balance: balance, currency: currency)
-                            // Обновляем данные в overviewVM
                             self.overviewVM?.updateData(balance: balance, currency: currency)
                           }
                         }
