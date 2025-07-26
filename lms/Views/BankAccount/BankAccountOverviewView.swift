@@ -22,6 +22,7 @@ struct BankAccountOverviewView: View {
           viewModel.toggleBalanceVisibility()
         }
       currencyRow
+      statisticsControl
       balanceHistoryChart
     }
     .padding()
@@ -58,6 +59,22 @@ struct BankAccountOverviewView: View {
     .cornerRadius(10)
   }
   
+  private var statisticsControl: some View {
+    Picker("Период статистики", selection: Binding(
+      get: { viewModel.selectedPeriod },
+      set: { newValue in
+        withAnimation(.easeInOut(duration: 0.3)) {
+          viewModel.changePeriod(to: newValue)
+        }
+      }
+    )) {
+      ForEach(StatisticsPeriod.allCases, id: \.self) { period in
+        Text(period.rawValue).tag(period)
+      }
+    }
+    .pickerStyle(SegmentedPickerStyle())
+  }
+  
   private var balanceHistoryChart: some View {
     VStack(alignment: .leading, spacing: 12) {
       if let errorMessage = viewModel.errorMessage {
@@ -86,7 +103,7 @@ struct BankAccountOverviewView: View {
       } else {
         Chart(viewModel.dailyBalances) { dailyBalance in
           BarMark(
-            x: .value("Date", dailyBalance.date, unit: .day),
+            x: .value("Date", dailyBalance.date, unit: viewModel.selectedPeriod == .daily ? .day : .month),
             y: .value("Balance", dailyBalance.balance.doubleValue),
             width: .ratio(0.6)
           )
@@ -95,7 +112,7 @@ struct BankAccountOverviewView: View {
         }
         .frame(height: 200)
         .chartXAxis {
-          AxisMarks(values: .stride(by: .day, count: 7)) { value in
+          AxisMarks(values: .stride(by: viewModel.selectedPeriod == .daily ? .day : .month, count: viewModel.selectedPeriod == .daily ? 7 : 6)) { value in
             if let date = value.as(Date.self) {
               AxisValueLabel {
                 Text(formatDateForChart(date))
@@ -112,6 +129,8 @@ struct BankAccountOverviewView: View {
           plotArea
             .background(.clear)
         }
+        .animation(.easeInOut(duration: 0.3), value: viewModel.selectedPeriod)
+        .id(viewModel.selectedPeriod)
       }
     }
     .padding()
@@ -120,7 +139,7 @@ struct BankAccountOverviewView: View {
   
   private func formatDateForChart(_ date: Date) -> String {
     let formatter = DateFormatter()
-    formatter.dateFormat = "dd.MM"
+    formatter.dateFormat = viewModel.selectedPeriod == .daily ? "dd.MM" : "MMM yy"
     return formatter.string(from: date)
   }
 }
